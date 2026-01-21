@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="El Pot de la Sort">
+  <rect width="64" height="64" rx="14" fill="#3b6ef5"/>
+  <rect x="14" y="10" width="36" height="12" rx="6" fill="#ffb703"/>
+  <path d="M18 22h28l-4 26c-.5 3-3.1 6-6.2 6H28.2c-3.1 0-5.7-3-6.2-6z" fill="#ffffff"/>
+  <circle cx="26" cy="36" r="3" fill="#3b6ef5"/>
+  <circle cx="38" cy="36" r="3" fill="#3b6ef5"/>
+  <path d="M26 42c2.2 2 9.8 2 12 0" stroke="#3b6ef5" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

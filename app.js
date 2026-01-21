@@ -30,7 +30,7 @@ const saveData = () => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
 };
 
-const $(id) => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 const addTapListener = (element, handler) => {
   if (!element) return;
