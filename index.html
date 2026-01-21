@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Pot de la Sort</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top-bar">
+        <div class="brand">
+          <span class="brand-icon">🎯</span>
+          <div>
+            <h1>El Pot de la Sort</h1>
+            <p>Una eina divertida i justa per crear grups i escollir persones a l’atzar a l’aula</p>
+          </div>
+        </div>
+        <button id="btn-go-landing" class="btn ghost">Tornar a l’inici</button>
+      </header>
+
+      <section id="landing" class="section landing">
+        <div class="landing-hero">
+          <div class="landing-text">
+            <h2>El Pot de la Sort</h2>
+            <p class="lead">
+              Crea grups equilibrats i escull persones a l’atzar amb un sol toc. Dissenyada per a
+              l’aula, ràpida i visual.
+            </p>
+            <div class="landing-features">
+              <div class="feature-card">
+                <span>👥</span>
+                <p>Creació de grups aleatoris i equilibrats</p>
+              </div>
+              <div class="feature-card">
+                <span>🎲</span>
+                <p>Selecció d’una persona a l’atzar amb suspens visual</p>
+              </div>
+              <div class="feature-card">
+                <span>⏱️</span>
+                <p>Estalvi de temps al professorat amb aules guardades</p>
+              </div>
+            </div>
+            <button id="btn-enter" class="btn primary big">Entrar a l’aplicació</button>
+          </div>
+          <div class="landing-illustration">
+            <div class="card-stack">
+              <div class="floating-card">A</div>
+              <div class="floating-card">B</div>
+              <div class="floating-card">C</div>
+            </div>
+            <p class="caption">Pensada per a pissarres digitals i ús tàctil</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="app" class="section hidden">
+        <nav class="nav">
+          <button class="btn tab active" data-target="config">Configuració d’aules</button>
+          <button class="btn tab" data-target="groups">Generador de grups</button>
+          <button class="btn tab" data-target="picker">Selector d’atzar</button>
+          <button class="btn tab" data-target="settings">Configuració</button>
+        </nav>
+
+        <div id="config" class="panel active">
+          <h2>Configuració d’aules</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Crear o editar aula</h3>
+              <label for="class-name">Nom de la classe</label>
+              <input id="class-name" type="text" placeholder="Ex: 2n ESO A" />
+              <label for="class-students">Llista d’alumnes (un nom per línia)</label>
+              <textarea id="class-students" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
+              <div class="row">
+                <button id="btn-save-class" class="btn primary">Desar aula</button>
+                <button id="btn-cancel-edit" class="btn ghost hidden">Cancel·lar edició</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Aules desades</h3>
+              <div id="class-list" class="cards"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="groups" class="panel">
+          <h2>Generador de grups aleatoris</h2>
+          <div class="grid-2">
+            <div class="card">
+              <label for="groups-class">Selecciona una aula</label>
+              <select id="groups-class"></select>
+              <label for="groups-students">Edició ràpida d’alumnes</label>
+              <textarea id="groups-students" rows="8" placeholder="Carrega una aula per editar"></textarea>
+              <label for="group-size">Nombre d’alumnes per grup</label>
+              <input id="group-size" type="number" min="2" value="3" />
+              <div class="row">
+                <button id="btn-generate-groups" class="btn primary">Crear grups aleatòriament</button>
+                <button id="btn-export-pdf" class="btn">Exportar a PDF</button>
+              </div>
+              <p class="hint">Els grups es reparteixen de forma equilibrada i sense alumnes sols si és possible.</p>
+            </div>
+            <div class="card">
+              <h3>Resultat dels grups</h3>
+              <div id="groups-result" class="cards groups"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="picker" class="panel">
+          <h2>Selector d’una persona a l’atzar</h2>
+          <div class="grid-2">
+            <div class="card">
+              <label for="picker-class">Selecciona una aula (opcional)</label>
+              <select id="picker-class"></select>
+              <label for="picker-list">O introdueix una llista manual</label>
+              <textarea id="picker-list" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
+              <button id="btn-pick" class="btn primary">Escollir una persona a l’atzar</button>
+            </div>
+            <div class="card">
+              <h3>Resultat</h3>
+              <div id="picker-animation" class="picker-animation">Preparat/da?</div>
+              <div id="picker-result" class="picker-result"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="settings" class="panel">
+          <h2>Configuració</h2>
+          <div class="card danger">
+            <h3>Reinici total</h3>
+            <p>
+              Esborra totes les dades guardades (aules, alumnes i configuracions). Aquesta acció és irreversible.
+            </p>
+            <button id="btn-reset" class="btn danger">Esborrar totes les dades</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
