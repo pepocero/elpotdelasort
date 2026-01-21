@@ -7,10 +7,15 @@ const defaultData = () => ({
   lastGroups: [],
 });
 
+const GROUP_ANIMATION_DURATION = 6500;
+
 const state = {
   data: defaultData(),
   editingId: "",
   lastTouchTime: 0,
+  shuffleTimer: null,
+  shuffleAnimating: false,
+  shuffleTimeouts: [],
 };
 
 const elements = {};
@@ -59,6 +64,52 @@ const parseList = (text) =>
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+
+const randomLetter = () => {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  return letters[Math.floor(Math.random() * letters.length)];
+};
+
+const setCardSizeFromGroups = (groups) => {
+  const maxSize = groups.reduce((max, group) => Math.max(max, group.length), 0);
+  const baseHeight = 140;
+  const perStudent = 22;
+  const height = Math.max(220, Math.min(320, baseHeight + maxSize * perStudent));
+  const width = 200;
+  elements.groupsResult.style.setProperty("--card-width", `${width}px`);
+  elements.groupsResult.style.setProperty("--card-height", `${height}px`);
+  document.documentElement.style.setProperty("--card-width", `${width}px`);
+  document.documentElement.style.setProperty("--card-height", `${height}px`);
+};
+
+const createShuffleCard = (letter, index) => {
+  const card = document.createElement("div");
+  card.className = "shuffle-card";
+  card.style.setProperty("--index", `${index}`);
+  card.dataset.letter = letter;
+  const letterSpan = document.createElement("span");
+  letterSpan.className = "shuffle-letter";
+  letterSpan.textContent = letter;
+  card.appendChild(letterSpan);
+  const face = document.createElement("div");
+  face.className = "shuffle-face shuffle-back";
+  const background = document.createElement("div");
+  background.className = "shuffle-background";
+  face.appendChild(background);
+  card.appendChild(face);
+  return card;
+};
+
+const updateShuffleStack = (cards, visibleLetters = 4) => {
+  cards.forEach((card, index) => {
+    card.style.setProperty("--index", `${index}`);
+    card.style.zIndex = (cards.length - index).toString();
+    const letterSpan = card.querySelector(".shuffle-letter");
+    if (letterSpan) {
+      letterSpan.textContent = index < visibleLetters ? card.dataset.letter : "";
+    }
+  });
+};
 
 const renderLanding = () => {
   elements.landing.classList.remove("hidden");
@@ -236,26 +287,127 @@ const createGroups = (students, groupSize) => {
 
 const renderGroups = (groups) => {
   elements.groupsResult.innerHTML = "";
+  setCardSizeFromGroups(groups);
   groups.forEach((group, index) => {
     const card = document.createElement("div");
-    card.className = "group-card";
-    const title = document.createElement("h4");
-    title.textContent = `Grup ${index + 1}`;
+    card.className = "group-card group-card-animated";
+    card.style.setProperty("--delay", `${index * 0.9}s`);
+
+    const inner = document.createElement("div");
+    inner.className = "group-card-inner";
+
+    const front = document.createElement("div");
+    front.className = "group-card-face group-card-front";
+
+    const back = document.createElement("div");
+    back.className = "group-card-face group-card-back";
+    const backTitle = document.createElement("h4");
+    backTitle.textContent = `Grup ${index + 1}`;
     const list = document.createElement("ul");
+    list.className = "group-list";
     group.forEach((student) => {
       const item = document.createElement("li");
       item.textContent = student;
       list.appendChild(item);
     });
-    card.appendChild(title);
-    card.appendChild(list);
+    back.appendChild(backTitle);
+    back.appendChild(list);
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
     elements.groupsResult.appendChild(card);
   });
 };
 
 const animateGroups = () => {
-  elements.groupsResult.innerHTML =
-    "<div class='group-card'>Barrejant cartes...</div>";
+  elements.groupsResult.innerHTML = "";
+  const area = document.createElement("div");
+  area.className = "shuffle-area";
+
+  const title = document.createElement("div");
+  title.className = "shuffle-title";
+  title.textContent = "Barrejant cartes amb espectació...";
+
+  const stack = document.createElement("div");
+  stack.className = "shuffle-cards";
+
+  const cards = [];
+  const totalCards = 5;
+  const visibleLetters = 3;
+  for (let i = 0; i < totalCards; i += 1) {
+    const letter = randomLetter();
+    const card = createShuffleCard(letter, i);
+    cards.push(card);
+    stack.appendChild(card);
+  }
+
+  area.appendChild(title);
+  area.appendChild(stack);
+  elements.groupsResult.appendChild(area);
+
+  if (state.shuffleTimer) {
+    clearInterval(state.shuffleTimer);
+  }
+  state.shuffleTimeouts.forEach((timeout) => clearTimeout(timeout));
+  state.shuffleTimeouts = [];
+  updateShuffleStack(cards, visibleLetters);
+
+  const runShuffleCycle = () => {
+    if (state.shuffleAnimating) return;
+    state.shuffleAnimating = true;
+
+    const first = cards[1];
+    const second = cards[2];
+    const third = cards[3];
+    const fourth = cards[4];
+    const top = cards[0];
+
+    if (!top) return;
+
+    if (second) second.style.left = "-50px";
+    if (third) third.style.left = "-100px";
+    if (fourth) fourth.style.left = "-150px";
+
+    const t1 = setTimeout(() => {
+      top.style.left = "210px";
+      if (first) first.style.left = "210px";
+      if (second) second.style.left = "0px";
+      if (third) third.style.left = "0px";
+      if (fourth) fourth.style.left = "0px";
+    }, 900);
+
+    const t2 = setTimeout(() => {
+      if (first) first.style.zIndex = "1";
+      top.style.zIndex = "2";
+      if (first) first.style.left = "0px";
+      top.style.left = "0px";
+    }, 1500);
+
+    const t3 = setTimeout(() => {
+      top.style.zIndex = "4";
+      if (first) first.style.zIndex = "3";
+      cards.push(cards.shift());
+      updateShuffleStack(cards, visibleLetters);
+      state.shuffleAnimating = false;
+    }, 2200);
+
+    state.shuffleTimeouts.push(t1, t2, t3);
+  };
+
+  const cycleDuration = 2400;
+  runShuffleCycle();
+  state.shuffleTimer = setInterval(runShuffleCycle, cycleDuration);
+};
+
+const stopShuffleAnimation = () => {
+  if (state.shuffleTimer) {
+    clearInterval(state.shuffleTimer);
+    state.shuffleTimer = null;
+  }
+  state.shuffleTimeouts.forEach((timeout) => clearTimeout(timeout));
+  state.shuffleTimeouts = [];
+  state.shuffleAnimating = false;
 };
 
 const handleGenerateGroups = () => {
@@ -266,15 +418,17 @@ const handleGenerateGroups = () => {
     return;
   }
 
+  const groups = createGroups(students, size);
+  setCardSizeFromGroups(groups);
   animateGroups();
   state.data.lastGroupSize = size;
 
   setTimeout(() => {
-    const groups = createGroups(students, size);
+    stopShuffleAnimation();
     state.data.lastGroups = groups;
     saveData();
     renderGroups(groups);
-  }, 900);
+  }, GROUP_ANIMATION_DURATION);
 };
 
 const getPickerList = () => {
