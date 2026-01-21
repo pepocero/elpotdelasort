@@ -366,6 +366,65 @@ const exportToPDF = () => {
   pdfWindow.print();
 };
 
+const exportData = () => {
+  const payload = {
+    ...state.data,
+    exportedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "el-pot-de-la-sort-dades.json";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const isValidImport = (data) => {
+  if (!data || typeof data !== "object") return false;
+  if (!Array.isArray(data.classrooms)) return false;
+  return data.classrooms.every((classroom) => {
+    return (
+      classroom &&
+      typeof classroom.id === "string" &&
+      typeof classroom.name === "string" &&
+      Array.isArray(classroom.students) &&
+      classroom.students.every((student) => typeof student === "string")
+    );
+  });
+};
+
+const importData = (file) => {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!isValidImport(parsed)) {
+        alert("El fitxer no té un format vàlid d'El Pot de la Sort.");
+        return;
+      }
+      state.data = {
+        ...defaultData(),
+        ...parsed,
+      };
+      saveData();
+      renderClassCards();
+      renderClassSelects();
+      elements.groupSize.value = state.data.lastGroupSize || 3;
+      elements.groupsResult.innerHTML = "";
+      elements.pickerResult.textContent = "";
+      elements.pickerAnimation.textContent = "Preparat/da?";
+      alert("Dades importades correctament.");
+    } catch (error) {
+      alert("No s'ha pogut llegir el fitxer. Revisa que sigui un JSON vàlid.");
+    }
+  };
+  reader.readAsText(file);
+};
+
 const handleReset = () => {
   const message =
     "Estàs segur/a que vols esborrar totes les dades? Aquesta acció no es pot desfer.";
@@ -399,6 +458,9 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.btnGenerateGroups = $("btn-generate-groups");
   elements.groupsResult = $("groups-result");
   elements.btnExportPDF = $("btn-export-pdf");
+  elements.btnExportData = $("btn-export-data");
+  elements.btnImportData = $("btn-import-data");
+  elements.importFile = $("import-file");
   elements.pickerClass = $("picker-class");
   elements.pickerList = $("picker-list");
   elements.btnPick = $("btn-pick");
@@ -419,6 +481,8 @@ document.addEventListener("DOMContentLoaded", () => {
   addTapListener(elements.btnGenerateGroups, handleGenerateGroups);
   addTapListener(elements.btnPick, handlePick);
   addTapListener(elements.btnExportPDF, exportToPDF);
+  addTapListener(elements.btnExportData, exportData);
+  addTapListener(elements.btnImportData, () => elements.importFile.click());
   addTapListener(elements.btnReset, handleReset);
 
   elements.groupsClass.addEventListener("change", (event) => {
@@ -434,5 +498,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll(".btn.tab").forEach((btn) => {
     addTapListener(btn, () => setActiveTab(btn.dataset.target));
+  });
+
+  elements.importFile.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    importData(file);
+    event.target.value = "";
   });
 });
