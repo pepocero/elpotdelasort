@@ -60,7 +60,8 @@
           <button class="btn tab active" data-target="config">Configuració d’aules</button>
           <button class="btn tab" data-target="groups">Generador de grups</button>
           <button class="btn tab" data-target="picker">Selector d’atzar</button>
-          <button class="btn tab" data-target="settings">Configuració</button>
+          <button class="btn tab" data-target="turns">Selector de torns</button>
+          <button class="btn tab icon-tab" data-target="settings" aria-label="Configuració" title="Configuració">⚙️</button>
         </nav>
 
         <div id="config" class="panel active">
@@ -113,6 +114,7 @@
             <div class="card">
               <label for="picker-class">Selecciona una aula (opcional)</label>
               <select id="picker-class"></select>
+              <div id="picker-class-students" class="turn-chips"></div>
               <label for="picker-list">O introdueix una llista manual</label>
               <textarea id="picker-list" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
               <button id="btn-pick" class="btn primary">Escollir una persona a l’atzar</button>
@@ -124,6 +126,29 @@
               <div id="picker-result" class="picker-result"></div>
                 <canvas id="picker-celebration" class="celebration-canvas" aria-hidden="true"></canvas>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="turns" class="panel">
+          <h2>Selector de torn continu</h2>
+          <div class="grid-2">
+            <div class="card">
+              <label for="turn-class">Selecciona una aula (opcional)</label>
+              <select id="turn-class"></select>
+              <div id="turn-class-students" class="turn-chips"></div>
+              <label for="turn-list">O introdueix una llista manual</label>
+              <textarea id="turn-list" rows="6" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
+              <div class="row">
+                <button id="btn-turn-start" class="btn primary">Començar torns</button>
+                <button id="btn-turn-next" class="btn">Següent torn</button>
+                <button id="btn-turn-reset" class="btn ghost">Reiniciar torns</button>
+              </div>
+              <div id="turn-current" class="turn-current">Preparat/da per començar?</div>
+            </div>
+            <div class="card">
+              <h3>Ordre dels torns</h3>
+              <div id="turn-list-display" class="turn-list"></div>
             </div>
           </div>
         </div>
@@ -150,6 +175,14 @@
           </div>
         </div>
       </section>
+    </div>
+
+    <div id="alert-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title">
+      <div class="modal-content">
+        <h3 id="alert-modal-title">Avís</h3>
+        <p id="alert-modal-message"></p>
+        <button id="alert-modal-close" class="btn primary" type="button">D'acord</button>
+      </div>
     </div>
 
     <script src="app.js"></script>

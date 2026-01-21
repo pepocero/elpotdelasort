@@ -17,6 +17,9 @@ const state = {
   shuffleAnimating: false,
   shuffleTimeouts: [],
   celebrationFrame: null,
+  turnPool: [],
+  turnPicked: [],
+  turnSourceKey: "",
 };
 
 const elements = {};
@@ -184,10 +187,16 @@ const renderClassSelects = () => {
 
   elements.groupsClass.innerHTML = emptyOption + options.join("");
   elements.pickerClass.innerHTML = emptyOption + options.join("");
+  if (elements.turnClass) {
+    elements.turnClass.innerHTML = emptyOption + options.join("");
+  }
 
   if (state.data.lastClassId) {
     elements.groupsClass.value = state.data.lastClassId;
     elements.pickerClass.value = state.data.lastClassId;
+    if (elements.turnClass) {
+      elements.turnClass.value = state.data.lastClassId;
+    }
     loadClassroomStudents(state.data.lastClassId);
   }
 };
@@ -203,11 +212,11 @@ const saveClassroom = () => {
   const name = elements.className.value.trim();
   const students = parseList(elements.classStudents.value);
   if (!name) {
-    alert("Cal indicar el nom de la classe.");
+    showAlert("Cal indicar el nom de la classe.");
     return;
   }
   if (students.length === 0) {
-    alert("Cal afegir almenys un alumne.");
+    showAlert("Cal afegir almenys un alumne.");
     return;
   }
 
@@ -415,7 +424,7 @@ const handleGenerateGroups = () => {
   const students = parseList(elements.groupsStudents.value);
   const size = Number(elements.groupSize.value) || 2;
   if (students.length < 2) {
-    alert("Cal tenir almenys 2 alumnes per crear grups.");
+    showAlert("Cal tenir almenys 2 alumnes per crear grups.");
     return;
   }
 
@@ -440,6 +449,23 @@ const getPickerList = () => {
   const classId = elements.pickerClass.value;
   const classroom = state.data.classrooms.find((item) => item.id === classId);
   return classroom ? classroom.students : [];
+};
+
+const renderPickerClassChips = () => {
+  if (!elements.pickerClassStudents) return;
+  elements.pickerClassStudents.innerHTML = "";
+  const classId = elements.pickerClass.value;
+  const classroom = state.data.classrooms.find((item) => item.id === classId);
+  const list = classroom ? classroom.students : [];
+  if (list.length === 0) {
+    return;
+  }
+  list.forEach((name) => {
+    const chip = document.createElement("span");
+    chip.className = "turn-chip";
+    chip.textContent = name;
+    elements.pickerClassStudents.appendChild(chip);
+  });
 };
 
 const animatePicker = (list) => {
@@ -584,19 +610,130 @@ const launchCelebration = () => {
   state.celebrationFrame = requestAnimationFrame(tick);
 };
 
+const getTurnCandidates = () => {
+  const manual = parseList(elements.turnList.value);
+  if (manual.length > 0) {
+    return { list: manual, key: `manual:${manual.join("|")}` };
+  }
+  const classId = elements.turnClass.value;
+  const classroom = state.data.classrooms.find((item) => item.id === classId);
+  const list = classroom ? classroom.students : [];
+  return { list, key: `class:${classId}` };
+};
+
+const renderTurnClassChips = () => {
+  if (!elements.turnClassStudents) return;
+  elements.turnClassStudents.innerHTML = "";
+  const classId = elements.turnClass.value;
+  const classroom = state.data.classrooms.find((item) => item.id === classId);
+  const list = classroom ? classroom.students : [];
+  if (list.length === 0) {
+    return;
+  }
+  list.forEach((name) => {
+    const chip = document.createElement("span");
+    chip.className = "turn-chip";
+    chip.textContent = name;
+    elements.turnClassStudents.appendChild(chip);
+  });
+};
+
+const renderTurnList = () => {
+  elements.turnListDisplay.innerHTML = "";
+  if (state.turnPicked.length === 0) {
+    elements.turnListDisplay.innerHTML = "<p>Encara no s'han iniciat els torns.</p>";
+    return;
+  }
+  state.turnPicked.forEach((name, index) => {
+    const item = document.createElement("div");
+    item.className = "turn-item";
+    item.classList.add("picked");
+    const label = document.createElement("span");
+    label.textContent = name;
+    const order = document.createElement("span");
+    order.className = "turn-order";
+    order.textContent = `#${index + 1}`;
+    item.appendChild(label);
+    item.appendChild(order);
+    elements.turnListDisplay.appendChild(item);
+  });
+};
+
+const resetTurnState = (list, key) => {
+  state.turnPool = shuffle(list);
+  state.turnPicked = [];
+  state.turnSourceKey = key;
+  elements.turnCurrent.textContent = "Preparat/da per començar?";
+  renderTurnList();
+};
+
+const startTurns = () => {
+  const { list, key } = getTurnCandidates();
+  if (list.length === 0) {
+    showAlert("Introdueix una llista o selecciona una aula.");
+    return;
+  }
+  resetTurnState(list, key);
+  handleTurnNext();
+};
+
+const handleTurnNext = () => {
+  const { list, key } = getTurnCandidates();
+  if (list.length === 0) {
+    showAlert("Introdueix una llista o selecciona una aula.");
+    return;
+  }
+  if (!state.turnSourceKey || state.turnSourceKey !== key) {
+    resetTurnState(list, key);
+  }
+  const next = state.turnPool.shift();
+  if (!next) {
+    showModal("Torns completats", "Ja han sortit tots els alumnes.");
+    return;
+  }
+  state.turnPicked.push(next);
+  elements.turnCurrent.textContent = next;
+  renderTurnList();
+};
+
+const handleTurnReset = () => {
+  const { list, key } = getTurnCandidates();
+  if (list.length === 0) {
+    showAlert("Introdueix una llista o selecciona una aula.");
+    return;
+  }
+  resetTurnState(list, key);
+};
+
 const handlePick = () => {
   const list = getPickerList();
   if (list.length === 0) {
-    alert("Introdueix una llista o selecciona una aula.");
+    showAlert("Introdueix una llista o selecciona una aula.");
     return;
   }
   elements.pickerResult.textContent = "";
   animatePicker(list);
 };
 
+const showModal = (title, message) => {
+  if (!elements.alertModal || !elements.alertModalMessage || !elements.alertModalTitle) return;
+  elements.alertModalTitle.textContent = title;
+  elements.alertModalMessage.textContent = message;
+  elements.alertModal.classList.remove("hidden");
+};
+
+const showAlert = (message) => {
+  showModal("Avís", message);
+};
+
+const hideModal = () => {
+  if (!elements.alertModal) return;
+  elements.alertModal.classList.add("hidden");
+};
+
 const exportToPDF = () => {
   if (!state.data.lastGroups || state.data.lastGroups.length === 0) {
-    alert("Primer cal generar els grups.");
+    showAlert("Primer cal generar els grups.");
     return;
   }
   const classId = elements.groupsClass.value || state.data.lastClassId;
@@ -635,7 +772,7 @@ const exportToPDF = () => {
 
   const pdfWindow = window.open("", "_blank");
   if (!pdfWindow) {
-    alert("El navegador ha bloquejat l'exportació. Permet finestres emergents.");
+    showAlert("El navegador ha bloquejat l'exportació. Permet finestres emergents.");
     return;
   }
   pdfWindow.document.write(content);
@@ -681,7 +818,7 @@ const importData = (file) => {
     try {
       const parsed = JSON.parse(reader.result);
       if (!isValidImport(parsed)) {
-        alert("El fitxer no té un format vàlid d'El Pot de la Sort.");
+        showAlert("El fitxer no té un format vàlid d'El Pot de la Sort.");
         return;
       }
       state.data = {
@@ -695,9 +832,9 @@ const importData = (file) => {
       elements.groupsResult.innerHTML = "";
       elements.pickerResult.textContent = "";
       elements.pickerAnimation.textContent = "Preparat/da?";
-      alert("Dades importades correctament.");
+      showAlert("Dades importades correctament.");
     } catch (error) {
-      alert("No s'ha pogut llegir el fitxer. Revisa que sigui un JSON vàlid.");
+      showAlert("No s'ha pogut llegir el fitxer. Revisa que sigui un JSON vàlid.");
     }
   };
   reader.readAsText(file);
@@ -744,7 +881,20 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.btnPick = $("btn-pick");
   elements.pickerAnimation = $("picker-animation");
   elements.pickerResult = $("picker-result");
+  elements.pickerClassStudents = $("picker-class-students");
   elements.celebrationCanvas = $("picker-celebration");
+  elements.turnClass = $("turn-class");
+  elements.turnList = $("turn-list");
+  elements.btnTurnStart = $("btn-turn-start");
+  elements.btnTurnNext = $("btn-turn-next");
+  elements.btnTurnReset = $("btn-turn-reset");
+  elements.turnCurrent = $("turn-current");
+  elements.turnListDisplay = $("turn-list-display");
+  elements.turnClassStudents = $("turn-class-students");
+  elements.alertModal = $("alert-modal");
+  elements.alertModalTitle = $("alert-modal-title");
+  elements.alertModalMessage = $("alert-modal-message");
+  elements.alertModalClose = $("alert-modal-close");
   elements.btnReset = $("btn-reset");
 
   state.data = loadData();
@@ -759,6 +909,9 @@ document.addEventListener("DOMContentLoaded", () => {
   addTapListener(elements.btnCancelEdit, resetForm);
   addTapListener(elements.btnGenerateGroups, handleGenerateGroups);
   addTapListener(elements.btnPick, handlePick);
+  addTapListener(elements.btnTurnStart, startTurns);
+  addTapListener(elements.btnTurnNext, handleTurnNext);
+  addTapListener(elements.btnTurnReset, handleTurnReset);
   addTapListener(elements.btnExportPDF, exportToPDF);
   addTapListener(elements.btnExportData, exportData);
   addTapListener(elements.btnImportData, () => elements.importFile.click());
@@ -773,11 +926,51 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.pickerClass.addEventListener("change", (event) => {
     state.data.lastClassId = event.target.value;
     saveData();
+    renderPickerClassChips();
+  });
+
+  elements.turnClass.addEventListener("change", (event) => {
+    state.data.lastClassId = event.target.value;
+    saveData();
+    renderTurnClassChips();
   });
 
   document.querySelectorAll(".btn.tab").forEach((btn) => {
-    addTapListener(btn, () => setActiveTab(btn.dataset.target));
+    addTapListener(btn, () => {
+      setActiveTab(btn.dataset.target);
+      if (elements.groupsClass) {
+        elements.groupsClass.value = "";
+        elements.groupsStudents.value = "";
+      }
+      if (elements.pickerClass) {
+        elements.pickerClass.value = "";
+        renderPickerClassChips();
+      }
+      if (elements.turnClass) {
+        elements.turnClass.value = "";
+        renderTurnClassChips();
+      }
+    });
   });
+
+  if (elements.alertModalClose) {
+    addTapListener(elements.alertModalClose, hideModal);
+    elements.alertModalClose.addEventListener("click", (event) => {
+      event.preventDefault();
+      hideModal();
+    });
+    elements.alertModalClose.addEventListener("touchend", (event) => {
+      event.preventDefault();
+      hideModal();
+    });
+  }
+  if (elements.alertModal) {
+    addTapListener(elements.alertModal, (event) => {
+      if (event.target === elements.alertModal) {
+        hideModal();
+      }
+    });
+  }
 
   elements.importFile.addEventListener("change", (event) => {
     const file = event.target.files[0];
@@ -787,4 +980,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("resize", resizeCelebrationCanvas);
   resizeCelebrationCanvas();
+  hideModal();
 });
