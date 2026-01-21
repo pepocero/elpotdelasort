@@ -11,7 +11,7 @@
     <div class="app">
       <header class="top-bar">
         <div class="brand">
-          <span class="brand-icon">🎯</span>
+          <img class="brand-icon" src="favicon.svg" alt="El Pot de la Sort" />
           <div>
             <h1>El Pot de la Sort</h1>
             <p>Una eina divertida i justa per crear grups i escollir persones a l’atzar a l’aula</p>
@@ -119,8 +119,11 @@
             </div>
             <div class="card">
               <h3>Resultat</h3>
+              <div class="picker-stage">
               <div id="picker-animation" class="picker-animation">Preparat/da?</div>
               <div id="picker-result" class="picker-result"></div>
+                <canvas id="picker-celebration" class="celebration-canvas" aria-hidden="true"></canvas>
+              </div>
             </div>
           </div>
         </div>

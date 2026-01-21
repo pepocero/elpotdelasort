@@ -51,7 +51,9 @@ body {
 }
 
 .brand-icon {
-  font-size: 38px;
+  width: 40px;
+  height: 40px;
+  display: block;
 }
 
 .brand h1 {
@@ -439,6 +441,24 @@ textarea {
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+.picker-animation.flip {
+  animation: flipDown 0.45s ease;
+}
+
+@keyframes flipDown {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(-90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
 }
 
 .picker-result {
@@ -446,6 +466,18 @@ textarea {
   font-weight: 800;
   color: var(--primary);
   text-align: center;
+}
+
+.picker-stage {
+  position: relative;
+}
+
+.celebration-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .shuffle-area {
@@ -643,5 +675,11 @@ textarea {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .top-bar {
+    display: none;
   }
 }

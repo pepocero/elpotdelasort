@@ -16,6 +16,7 @@ const state = {
   shuffleTimer: null,
   shuffleAnimating: false,
   shuffleTimeouts: [],
+  celebrationFrame: null,
 };
 
 const elements = {};
@@ -443,22 +444,144 @@ const getPickerList = () => {
 
 const animatePicker = (list) => {
   let index = 0;
-  const duration = 2000;
-  const start = Date.now();
+  const intervalMs = 360;
+  const minFlips = 20;
+  const totalFlips = list.length >= minFlips ? list.length : minFlips;
+  const sequence = [];
+  if (list.length >= minFlips) {
+    sequence.push(...shuffle(list));
+  } else {
+    for (let i = 0; i < totalFlips; i += 1) {
+      sequence.push(list[Math.floor(Math.random() * list.length)]);
+    }
+  }
 
   elements.pickerResult.textContent = "";
 
   const interval = setInterval(() => {
-    const current = list[index % list.length];
-    elements.pickerAnimation.textContent = current;
-    index += 1;
-    if (Date.now() - start > duration) {
+    if (index >= sequence.length) {
       clearInterval(interval);
-      const finalPick = list[Math.floor(Math.random() * list.length)];
-      elements.pickerAnimation.textContent = "I la persona escollida és...";
-      elements.pickerResult.textContent = finalPick;
+      const finalPick = sequence[sequence.length - 1];
+      setTimeout(() => {
+        elements.pickerAnimation.textContent = finalPick;
+        launchCelebration();
+      }, 260);
+      elements.pickerResult.textContent = "";
+      return;
     }
-  }, 120);
+    const current = sequence[index];
+    elements.pickerAnimation.classList.remove("flip");
+    void elements.pickerAnimation.offsetWidth;
+    elements.pickerAnimation.classList.add("flip");
+    setTimeout(() => {
+      elements.pickerAnimation.textContent = current;
+    }, 220);
+    index += 1;
+  }, intervalMs);
+};
+
+const resizeCelebrationCanvas = () => {
+  if (!elements.celebrationCanvas) return;
+  const rect = elements.celebrationCanvas.getBoundingClientRect();
+  elements.celebrationCanvas.width = Math.max(1, Math.floor(rect.width));
+  elements.celebrationCanvas.height = Math.max(1, Math.floor(rect.height));
+};
+
+const launchCelebration = () => {
+  if (!elements.celebrationCanvas) return;
+  const ctx = elements.celebrationCanvas.getContext("2d");
+  if (!ctx) return;
+  resizeCelebrationCanvas();
+
+  if (state.celebrationFrame) {
+    cancelAnimationFrame(state.celebrationFrame);
+    state.celebrationFrame = null;
+  }
+
+  const width = elements.celebrationCanvas.width;
+  const height = elements.celebrationCanvas.height;
+  const particles = [];
+  const colors = ["#ffb703", "#3b6ef5", "#e63946", "#2a9d8f", "#8338ec"];
+
+  const createConfetti = () => {
+    for (let i = 0; i < 80; i += 1) {
+      particles.push({
+        x: Math.random() * width,
+        y: -20,
+        vx: (Math.random() - 0.5) * 1.8,
+        vy: 1 + Math.random() * 2.2,
+        size: 4 + Math.random() * 4,
+        rotation: Math.random() * Math.PI,
+        spin: (Math.random() - 0.5) * 0.2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 200 + Math.random() * 80,
+      });
+    }
+  };
+
+  const createFireworks = () => {
+    const centerX = width * (0.3 + Math.random() * 0.4);
+    const centerY = height * (0.2 + Math.random() * 0.3);
+    for (let i = 0; i < 40; i += 1) {
+      const angle = (Math.PI * 2 * i) / 40;
+      const speed = 1.2 + Math.random() * 1.6;
+      particles.push({
+        x: centerX,
+        y: centerY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 3 + Math.random() * 2,
+        rotation: 0,
+        spin: 0,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 80 + Math.random() * 40,
+      });
+    }
+  };
+
+  createConfetti();
+  createFireworks();
+
+  const start = Date.now();
+  const duration = 2400;
+
+  const tick = () => {
+    const elapsed = Date.now() - start;
+    ctx.clearRect(0, 0, width, height);
+
+    particles.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.015;
+      p.rotation += p.spin;
+      p.life -= 1;
+    });
+
+    for (let i = particles.length - 1; i >= 0; i -= 1) {
+      if (particles[i].life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+
+    particles.forEach((p) => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life / 120));
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+    });
+
+    if (elapsed < duration || particles.length > 0) {
+      state.celebrationFrame = requestAnimationFrame(tick);
+    } else {
+      ctx.clearRect(0, 0, width, height);
+      state.celebrationFrame = null;
+    }
+  };
+
+  state.celebrationFrame = requestAnimationFrame(tick);
 };
 
 const handlePick = () => {
@@ -467,6 +590,7 @@ const handlePick = () => {
     alert("Introdueix una llista o selecciona una aula.");
     return;
   }
+  elements.pickerResult.textContent = "";
   animatePicker(list);
 };
 
@@ -620,6 +744,7 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.btnPick = $("btn-pick");
   elements.pickerAnimation = $("picker-animation");
   elements.pickerResult = $("picker-result");
+  elements.celebrationCanvas = $("picker-celebration");
   elements.btnReset = $("btn-reset");
 
   state.data = loadData();
@@ -659,4 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
     importData(file);
     event.target.value = "";
   });
+
+  window.addEventListener("resize", resizeCelebrationCanvas);
+  resizeCelebrationCanvas();
 });
