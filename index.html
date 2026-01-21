@@ -56,13 +56,22 @@
       </section>
 
       <section id="app" class="section hidden">
-        <nav class="nav">
-          <button class="btn tab active" data-target="config">Configuració d’aules</button>
-          <button class="btn tab" data-target="groups">Generador de grups</button>
-          <button class="btn tab" data-target="picker">Selector d’atzar</button>
-          <button class="btn tab" data-target="turns">Selector de torns</button>
-          <button class="btn tab icon-tab" data-target="settings" aria-label="Configuració" title="Configuració">⚙️</button>
-        </nav>
+        <button id="btn-burger" class="btn burger" aria-label="Obrir menú">☰</button>
+        <div id="sidebar" class="sidebar" aria-label="Menú principal">
+          <div class="sidebar-header">
+            <span>Menú</span>
+            <button id="btn-close-sidebar" class="btn ghost" aria-label="Tancar menú">✕</button>
+          </div>
+          <div class="sidebar-links">
+            <button class="btn tab active" data-target="config">Configuració d’aules</button>
+            <button class="btn tab" data-target="groups">Generador de grups</button>
+            <button class="btn tab" data-target="picker">Selector d’atzar</button>
+            <button class="btn tab" data-target="turns">Selector de torns</button>
+            <button class="btn tab" data-target="timer">Temporitzador</button>
+            <button class="btn tab" data-target="settings">Configuració</button>
+          </div>
+        </div>
+        <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
 
         <div id="config" class="panel active">
           <h2>Configuració d’aules</h2>
@@ -153,8 +162,61 @@
           </div>
         </div>
 
+        <div id="timer" class="panel">
+          <h2>Temporitzador visual per a activitats</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Selecciona una durada</h3>
+              <div class="row">
+                <button class="btn timer-preset" data-minutes="5">5 min</button>
+                <button class="btn timer-preset" data-minutes="10">10 min</button>
+                <button class="btn timer-preset" data-minutes="15">15 min</button>
+                <button class="btn timer-preset" data-minutes="20">20 min</button>
+              </div>
+              <div class="timer-stepper">
+                <button id="btn-timer-minus" class="btn ghost" type="button" aria-label="Restar un minut">-</button>
+                <div id="timer-custom-display" class="timer-custom-display">10 minuts</div>
+                <button id="btn-timer-plus" class="btn ghost" type="button" aria-label="Afegir un minut">+</button>
+              </div>
+              <p class="timer-hint">Mantén premut per saltar de 5 minuts.</p>
+              <div class="row">
+                <button id="btn-timer-start" class="btn primary">Iniciar</button>
+                <button id="btn-timer-pause" class="btn">Pausa</button>
+                <button id="btn-timer-reset" class="btn ghost">Reiniciar</button>
+              </div>
+            </div>
+            <div class="card timer-card">
+              <div id="timer-circle" class="timer-circle" role="img" aria-label="Temporitzador">
+                <div id="timer-display" class="timer-display">10:00</div>
+              </div>
+              <div id="timer-status" class="timer-status">Preparat/da</div>
+            </div>
+          </div>
+        </div>
+
         <div id="settings" class="panel">
           <h2>Configuració</h2>
+          <div class="card">
+            <h3>So del temporitzador</h3>
+            <label for="timer-sound">Selecciona un so de finalització</label>
+            <select id="timer-sound">
+              <option value="beep_long">Xiulet suau</option>
+              <option value="whistle">Xiulet esportiu</option>
+              <option value="bell">Campanades d'església</option>
+              <option value="police_siren">Sirena de policia</option>
+              <option value="air_raid_siren">Sirena d'atac aeri</option>
+              <option value="siren">Sirena d'alarma</option>
+            </select>
+            <label for="timer-sound-duration">Durada del so (segons)</label>
+            <div class="timer-stepper">
+              <button id="btn-sound-minus" class="btn ghost" type="button" aria-label="Restar un segon">-</button>
+              <div id="timer-sound-duration" class="timer-custom-display">2 segons</div>
+              <button id="btn-sound-plus" class="btn ghost" type="button" aria-label="Afegir un segon">+</button>
+            </div>
+            <div class="row">
+              <button id="btn-timer-sound-test" class="btn">Provar so</button>
+            </div>
+          </div>
           <div class="card">
             <h3>Exportar i importar dades</h3>
             <p>

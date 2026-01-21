@@ -5,6 +5,8 @@ const defaultData = () => ({
   lastClassId: "",
   lastGroupSize: 3,
   lastGroups: [],
+  timerSound: "beep_long",
+  timerSoundDurationSec: 2,
 });
 
 const GROUP_ANIMATION_DURATION = 6500;
@@ -20,6 +22,20 @@ const state = {
   turnPool: [],
   turnPicked: [],
   turnSourceKey: "",
+  timer: {
+    durationMs: 10 * 60 * 1000,
+    remainingMs: 10 * 60 * 1000,
+    running: false,
+    intervalId: null,
+    endAt: null,
+  },
+  timerSeconds: 10 * 60,
+  timerHold: {
+    timeoutId: null,
+    intervalId: null,
+    handledLong: false,
+  },
+  audioContext: null,
 };
 
 const elements = {};
@@ -722,6 +738,275 @@ const showModal = (title, message) => {
   elements.alertModal.classList.remove("hidden");
 };
 
+const formatTime = (ms) => {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+};
+
+const updateTimerUI = () => {
+  if (!elements.timerCircle || !elements.timerDisplay || !elements.timerStatus) return;
+  const progress =
+    state.timer.durationMs > 0 ? state.timer.remainingMs / state.timer.durationMs : 0;
+  const percent = Math.max(0, Math.min(100, progress * 100));
+  elements.timerCircle.style.background = `conic-gradient(var(--primary) ${percent}%, #e3e9fb ${percent}%)`;
+  elements.timerDisplay.textContent = formatTime(state.timer.remainingMs);
+  elements.timerStatus.textContent = state.timer.running ? "En marxa" : "Preparat/da";
+  if (elements.timerCustomDisplay) {
+    if (state.timerSeconds >= 60) {
+      const minutes = Math.round(state.timerSeconds / 60);
+      elements.timerCustomDisplay.textContent = `${minutes} minuts`;
+    } else {
+      elements.timerCustomDisplay.textContent = `${state.timerSeconds} segons`;
+    }
+  }
+  if (elements.timerSoundDurationDisplay) {
+    elements.timerSoundDurationDisplay.textContent = `${state.data.timerSoundDurationSec} segons`;
+  }
+  if (elements.btnTimerSoundTest) {
+    elements.btnTimerSoundTest.disabled = state.timer.running;
+  }
+  if (state.timer.remainingMs <= 0) {
+    elements.timerCircle.classList.add("finished");
+  } else {
+    elements.timerCircle.classList.remove("finished");
+  }
+};
+
+const stopTimer = () => {
+  if (state.timer.intervalId) {
+    clearInterval(state.timer.intervalId);
+    state.timer.intervalId = null;
+  }
+  state.timer.running = false;
+  state.timer.endAt = null;
+};
+
+const getAudioContext = () => {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return null;
+  if (!state.audioContext || state.audioContext.state === "closed") {
+    state.audioContext = new AudioContext();
+  }
+  return state.audioContext;
+};
+
+const playTone = (ctx, frequency, duration, gainValue, type, startAt) => {
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  oscillator.type = type || "sine";
+  oscillator.frequency.value = frequency;
+  gain.gain.value = gainValue;
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  const start = ctx.currentTime + startAt;
+  oscillator.start(start);
+  oscillator.stop(start + duration);
+};
+
+const playBell = (ctx, durationSec) => {
+  const now = ctx.currentTime;
+  const pulses = Math.max(1, Math.min(4, Math.round(durationSec / 1.4)));
+  for (let i = 0; i < pulses; i += 1) {
+    const start = now + i * 1.1;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.06, start);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + 1.6);
+    gain.connect(ctx.destination);
+
+    const osc1 = ctx.createOscillator();
+    osc1.type = "sine";
+    osc1.frequency.value = 520;
+    osc1.connect(gain);
+    osc1.start(start);
+    osc1.stop(start + 1.6);
+
+    const osc2 = ctx.createOscillator();
+    osc2.type = "sine";
+    osc2.frequency.value = 780;
+    osc2.connect(gain);
+    osc2.start(start);
+    osc2.stop(start + 1.3);
+  }
+};
+
+const playSiren = (ctx, durationSec) => {
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(520, now);
+  for (let t = 0; t <= durationSec; t += 1.4) {
+    osc.frequency.linearRampToValueAtTime(920, now + t + 0.7);
+    osc.frequency.linearRampToValueAtTime(520, now + t + 1.4);
+  }
+  gain.gain.value = 0.05;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + durationSec);
+};
+
+const playRadiation = (ctx, durationSec) => {
+  const interval = 0.22;
+  const count = Math.max(1, Math.floor(durationSec / interval));
+  for (let i = 0; i < count; i += 1) {
+    playTone(ctx, 780, 0.12, 0.05, "square", i * interval);
+  }
+};
+
+const playWhistle = (ctx, durationSec) => {
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = 1200;
+  lfo.type = "sine";
+  lfo.frequency.value = 6;
+  lfoGain.gain.value = 25;
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+  gain.gain.value = 0.04;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  lfo.start(now);
+  osc.stop(now + durationSec);
+  lfo.stop(now + durationSec);
+};
+
+const playTimerSound = () => {
+  const sound = state.data.timerSound || "beep_long";
+  const durationSec = state.data.timerSoundDurationSec || 2;
+  const fileMap = {
+    bell: "audio/church-bell.mp3",
+    police_siren: "audio/police-siren.mp3",
+    air_raid_siren: "audio/air-raid-siren.mp3",
+  };
+  if (fileMap[sound]) {
+    const audio = new Audio(fileMap[sound]);
+    audio.currentTime = 0;
+    audio.loop = durationSec > 1;
+    audio.play().catch(() => {});
+    if (durationSec > 0) {
+      setTimeout(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }, durationSec * 1000);
+    }
+    return;
+  }
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (sound === "beep_long") {
+    playTone(ctx, 660, Math.max(0.6, durationSec), 0.05, "sine", 0);
+    return;
+  }
+  if (sound === "whistle") {
+    playWhistle(ctx, durationSec);
+    return;
+  }
+  if (sound === "siren") {
+    playSiren(ctx, durationSec);
+  }
+};
+
+const startTimer = () => {
+  if (state.timer.running) return;
+  if (state.timer.remainingMs <= 0) {
+    state.timer.remainingMs = state.timer.durationMs;
+  }
+  state.timer.running = true;
+  state.timer.endAt = Date.now() + state.timer.remainingMs;
+  updateTimerUI();
+  state.timer.intervalId = setInterval(() => {
+    const remaining = state.timer.endAt - Date.now();
+    state.timer.remainingMs = Math.max(0, remaining);
+    updateTimerUI();
+    if (state.timer.remainingMs <= 0) {
+      stopTimer();
+      updateTimerUI();
+      playTimerSound();
+      showModal("Temps finalitzat", "El temps s'ha acabat.");
+    }
+  }, 200);
+};
+
+const pauseTimer = () => {
+  if (!state.timer.running) return;
+  stopTimer();
+  updateTimerUI();
+};
+
+const resetTimer = () => {
+  stopTimer();
+  state.timer.remainingMs = state.timer.durationMs;
+  updateTimerUI();
+};
+
+const setTimerDuration = (minutes) => {
+  const clamped = Math.max(1, Math.min(60, minutes));
+  const seconds = clamped * 60;
+  state.timerSeconds = seconds;
+  state.timer.durationMs = seconds * 1000;
+  state.timer.remainingMs = seconds * 1000;
+  updateTimerUI();
+};
+
+const setTimerSeconds = (seconds) => {
+  const clamped = Math.max(10, Math.min(3600, seconds));
+  state.timerSeconds = clamped;
+  state.timer.durationMs = clamped * 1000;
+  state.timer.remainingMs = clamped * 1000;
+  updateTimerUI();
+};
+
+const adjustTimerStep = (delta) => {
+  if (state.timer.running) return;
+  if (state.timerSeconds > 60) {
+    setTimerSeconds(state.timerSeconds + delta * 60);
+    return;
+  }
+  setTimerSeconds(state.timerSeconds + delta * 5);
+};
+
+const adjustTimerStepLong = (delta) => {
+  if (state.timer.running) return;
+  if (state.timerSeconds > 60) {
+    setTimerSeconds(state.timerSeconds + delta * 300);
+    return;
+  }
+  setTimerSeconds(state.timerSeconds + delta * 5);
+};
+
+const startTimerHold = (delta) => {
+  if (state.timer.running) return;
+  clearTimeout(state.timerHold.timeoutId);
+  clearInterval(state.timerHold.intervalId);
+  state.timerHold.handledLong = false;
+  state.timerHold.timeoutId = setTimeout(() => {
+    state.timerHold.handledLong = true;
+    adjustTimerStepLong(delta);
+    state.timerHold.intervalId = setInterval(() => {
+      adjustTimerStepLong(delta);
+    }, 450);
+  }, 500);
+};
+
+const stopTimerHold = (delta) => {
+  clearTimeout(state.timerHold.timeoutId);
+  clearInterval(state.timerHold.intervalId);
+  state.timerHold.timeoutId = null;
+  state.timerHold.intervalId = null;
+  if (!state.timerHold.handledLong) {
+    adjustTimerStep(delta);
+  }
+};
+
 const showAlert = (message) => {
   showModal("Avís", message);
 };
@@ -829,6 +1114,11 @@ const importData = (file) => {
       renderClassCards();
       renderClassSelects();
       elements.groupSize.value = state.data.lastGroupSize || 3;
+      if (elements.timerSound) {
+        elements.timerSound.value = state.data.timerSound || "beep_long";
+      }
+      state.data.timerSoundDurationSec = state.data.timerSoundDurationSec || 2;
+      updateTimerUI();
       elements.groupsResult.innerHTML = "";
       elements.pickerResult.textContent = "";
       elements.pickerAnimation.textContent = "Preparat/da?";
@@ -854,6 +1144,11 @@ const handleReset = () => {
   elements.pickerList.value = "";
   elements.pickerAnimation.textContent = "Preparat/da?";
   elements.pickerResult.textContent = "";
+  if (elements.timerSound) {
+    elements.timerSound.value = state.data.timerSound;
+  }
+  state.data.timerSoundDurationSec = state.data.timerSoundDurationSec || 2;
+  updateTimerUI();
   renderLanding();
 };
 
@@ -895,9 +1190,29 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.alertModalTitle = $("alert-modal-title");
   elements.alertModalMessage = $("alert-modal-message");
   elements.alertModalClose = $("alert-modal-close");
+  elements.btnBurger = $("btn-burger");
+  elements.btnCloseSidebar = $("btn-close-sidebar");
+  elements.sidebar = $("sidebar");
+  elements.sidebarBackdrop = $("sidebar-backdrop");
+  elements.btnTimerSoundTest = $("btn-timer-sound-test");
+  elements.timerSound = $("timer-sound");
+  elements.btnSoundMinus = $("btn-sound-minus");
+  elements.btnSoundPlus = $("btn-sound-plus");
+  elements.timerSoundDurationDisplay = $("timer-sound-duration");
+  elements.timerCircle = $("timer-circle");
+  elements.timerDisplay = $("timer-display");
+  elements.timerStatus = $("timer-status");
+  elements.btnTimerStart = $("btn-timer-start");
+  elements.btnTimerPause = $("btn-timer-pause");
+  elements.btnTimerReset = $("btn-timer-reset");
+  elements.btnTimerMinus = $("btn-timer-minus");
+  elements.btnTimerPlus = $("btn-timer-plus");
+  elements.timerCustomDisplay = $("timer-custom-display");
   elements.btnReset = $("btn-reset");
 
   state.data = loadData();
+  state.data.timerSound = state.data.timerSound || "beep_long";
+  state.data.timerSoundDurationSec = state.data.timerSoundDurationSec || 2;
 
   renderClassCards();
   renderClassSelects();
@@ -912,6 +1227,35 @@ document.addEventListener("DOMContentLoaded", () => {
   addTapListener(elements.btnTurnStart, startTurns);
   addTapListener(elements.btnTurnNext, handleTurnNext);
   addTapListener(elements.btnTurnReset, handleTurnReset);
+  addTapListener(elements.btnTimerStart, startTimer);
+  addTapListener(elements.btnTimerPause, pauseTimer);
+  addTapListener(elements.btnTimerReset, resetTimer);
+  if (elements.btnTimerMinus) {
+    elements.btnTimerMinus.addEventListener("mousedown", () => startTimerHold(-1));
+    elements.btnTimerMinus.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      startTimerHold(-1);
+    });
+    elements.btnTimerMinus.addEventListener("mouseup", () => stopTimerHold(-1));
+    elements.btnTimerMinus.addEventListener("mouseleave", () => stopTimerHold(-1));
+    elements.btnTimerMinus.addEventListener("touchend", (event) => {
+      event.preventDefault();
+      stopTimerHold(-1);
+    });
+  }
+  if (elements.btnTimerPlus) {
+    elements.btnTimerPlus.addEventListener("mousedown", () => startTimerHold(1));
+    elements.btnTimerPlus.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      startTimerHold(1);
+    });
+    elements.btnTimerPlus.addEventListener("mouseup", () => stopTimerHold(1));
+    elements.btnTimerPlus.addEventListener("mouseleave", () => stopTimerHold(1));
+    elements.btnTimerPlus.addEventListener("touchend", (event) => {
+      event.preventDefault();
+      stopTimerHold(1);
+    });
+  }
   addTapListener(elements.btnExportPDF, exportToPDF);
   addTapListener(elements.btnExportData, exportData);
   addTapListener(elements.btnImportData, () => elements.importFile.click());
@@ -935,6 +1279,33 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTurnClassChips();
   });
 
+  if (elements.timerSound) {
+    elements.timerSound.value = state.data.timerSound || "beep_long";
+    elements.timerSound.addEventListener("change", (event) => {
+      state.data.timerSound = event.target.value;
+      saveData();
+    });
+  }
+  if (elements.btnSoundMinus) {
+    addTapListener(elements.btnSoundMinus, () => {
+      const next = Math.max(1, Math.min(15, state.data.timerSoundDurationSec - 1));
+      state.data.timerSoundDurationSec = next;
+      saveData();
+      updateTimerUI();
+    });
+  }
+  if (elements.btnSoundPlus) {
+    addTapListener(elements.btnSoundPlus, () => {
+      const next = Math.max(1, Math.min(15, state.data.timerSoundDurationSec + 1));
+      state.data.timerSoundDurationSec = next;
+      saveData();
+      updateTimerUI();
+    });
+  }
+  if (elements.btnTimerSoundTest) {
+    addTapListener(elements.btnTimerSoundTest, playTimerSound);
+  }
+
   document.querySelectorAll(".btn.tab").forEach((btn) => {
     addTapListener(btn, () => {
       setActiveTab(btn.dataset.target);
@@ -950,6 +1321,38 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.turnClass.value = "";
         renderTurnClassChips();
       }
+      if (elements.sidebar) {
+        elements.sidebar.classList.remove("open");
+      }
+      if (elements.sidebarBackdrop) {
+        elements.sidebarBackdrop.classList.remove("visible");
+      }
+    });
+  });
+
+  const openSidebar = () => {
+    if (elements.sidebar) elements.sidebar.classList.add("open");
+    if (elements.sidebarBackdrop) elements.sidebarBackdrop.classList.add("visible");
+  };
+  const closeSidebar = () => {
+    if (elements.sidebar) elements.sidebar.classList.remove("open");
+    if (elements.sidebarBackdrop) elements.sidebarBackdrop.classList.remove("visible");
+  };
+  if (elements.btnBurger) {
+    addTapListener(elements.btnBurger, openSidebar);
+  }
+  if (elements.btnCloseSidebar) {
+    addTapListener(elements.btnCloseSidebar, closeSidebar);
+  }
+  if (elements.sidebarBackdrop) {
+    addTapListener(elements.sidebarBackdrop, closeSidebar);
+  }
+
+  document.querySelectorAll(".timer-preset").forEach((btn) => {
+    addTapListener(btn, () => {
+      const minutes = Number(btn.dataset.minutes) || 10;
+      setTimerDuration(minutes);
+      resetTimer();
     });
   });
 
@@ -981,4 +1384,5 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("resize", resizeCelebrationCanvas);
   resizeCelebrationCanvas();
   hideModal();
+  updateTimerUI();
 });
