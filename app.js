@@ -328,7 +328,7 @@ const animateGroups = () => {
 
   const title = document.createElement("div");
   title.className = "shuffle-title";
-  title.textContent = "Barrejant cartes amb espectació...";
+  title.textContent = "Barrejant cartes...";
 
   const stack = document.createElement("div");
   stack.className = "shuffle-cards";
