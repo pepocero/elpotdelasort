@@ -234,6 +234,8 @@
             </div>
             <div class="card">
               <h3>Ruleta amb opcions</h3>
+              <label for="roulette-saved">Selecciona opcions guardades</label>
+              <select id="roulette-saved"></select>
               <label for="roulette-options">Opcions (una per línia)</label>
               <textarea id="roulette-options" rows="6" placeholder="Pregunta 1&#10;Repte 2&#10;Tema 3"></textarea>
               <div class="row">
@@ -250,6 +252,18 @@
 
         <div id="settings" class="panel">
           <h2>Configuració</h2>
+          <div class="card">
+            <h3>Opcions guardades de la ruleta</h3>
+            <label for="roulette-set-name">Nom del conjunt</label>
+            <input id="roulette-set-name" type="text" placeholder="Ex: Preguntes ràpides" />
+            <label for="roulette-set-options">Opcions (una per línia)</label>
+            <textarea id="roulette-set-options" rows="6" placeholder="Opció 1&#10;Opció 2&#10;Opció 3"></textarea>
+            <div class="row">
+              <button id="btn-save-roulette-set" class="btn primary">Desar conjunt</button>
+              <button id="btn-cancel-roulette-edit" class="btn ghost hidden">Cancel·lar edició</button>
+            </div>
+            <div id="roulette-set-list" class="cards"></div>
+          </div>
           <div class="card">
             <h3>So del temporitzador</h3>
             <label for="timer-sound">Selecciona un so de finalització</label>

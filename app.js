@@ -7,6 +7,8 @@ const defaultData = () => ({
   lastGroups: [],
   timerSound: "beep_long",
   timerSoundDurationSec: 2,
+  rouletteSets: [],
+  lastRouletteSetId: "",
 });
 
 const GROUP_ANIMATION_DURATION = 6500;
@@ -41,6 +43,7 @@ const state = {
   rouletteRotation: 0,
   rouletteSpinning: false,
   rouletteLastIndex: null,
+  rouletteEditingId: "",
 };
 
 const elements = {};
@@ -220,6 +223,150 @@ const renderClassSelects = () => {
     }
     loadClassroomStudents(state.data.lastClassId);
   }
+};
+
+const renderRouletteSetCards = () => {
+  if (!elements.rouletteSetList) return;
+  elements.rouletteSetList.innerHTML = "";
+  if (!state.data.rouletteSets || state.data.rouletteSets.length === 0) {
+    elements.rouletteSetList.innerHTML = "<p>No hi ha conjunts guardats encara.</p>";
+    return;
+  }
+  state.data.rouletteSets.forEach((setItem) => {
+    const card = document.createElement("div");
+    card.className = "class-card";
+
+    const title = document.createElement("h4");
+    title.textContent = setItem.name;
+    card.appendChild(title);
+
+    const meta = document.createElement("p");
+    meta.textContent = `${setItem.options.length} opcions`;
+    card.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const btnSelect = document.createElement("button");
+    btnSelect.className = "btn";
+    btnSelect.textContent = "Seleccionar";
+    addTapListener(btnSelect, () => selectRouletteSet(setItem.id));
+
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn";
+    btnEdit.textContent = "Editar";
+    addTapListener(btnEdit, () => startEditRouletteSet(setItem.id));
+
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "btn";
+    btnDelete.textContent = "Eliminar";
+    addTapListener(btnDelete, () => deleteRouletteSet(setItem.id));
+
+    actions.appendChild(btnSelect);
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnDelete);
+    card.appendChild(actions);
+    elements.rouletteSetList.appendChild(card);
+  });
+};
+
+const renderRouletteSetSelect = () => {
+  if (!elements.rouletteSaved) return;
+  const options = (state.data.rouletteSets || []).map((setItem) => {
+    return `<option value="${setItem.id}">${setItem.name}</option>`;
+  });
+  const emptyOption = `<option value="">Selecciona un conjunt</option>`;
+  elements.rouletteSaved.innerHTML = emptyOption + options.join("");
+  if (state.data.lastRouletteSetId) {
+    elements.rouletteSaved.value = state.data.lastRouletteSetId;
+  }
+};
+
+const resetRouletteSetForm = () => {
+  if (!elements.rouletteSetName || !elements.rouletteSetOptions) return;
+  elements.rouletteSetName.value = "";
+  elements.rouletteSetOptions.value = "";
+  state.rouletteEditingId = "";
+  if (elements.btnCancelRouletteEdit) {
+    elements.btnCancelRouletteEdit.classList.add("hidden");
+  }
+};
+
+const saveRouletteSet = () => {
+  const name = elements.rouletteSetName.value.trim();
+  const options = parseList(elements.rouletteSetOptions.value);
+  if (!name) {
+    showAlert("Cal indicar el nom del conjunt.");
+    return;
+  }
+  if (options.length < 2) {
+    showAlert("Cal afegir almenys 2 opcions.");
+    return;
+  }
+  if (state.rouletteEditingId) {
+    const existing = state.data.rouletteSets.find((item) => item.id === state.rouletteEditingId);
+    if (existing) {
+      existing.name = name;
+      existing.options = options;
+    }
+  } else {
+    state.data.rouletteSets.push({
+      id: crypto.randomUUID(),
+      name,
+      options,
+    });
+  }
+  saveData();
+  renderRouletteSetCards();
+  renderRouletteSetSelect();
+  resetRouletteSetForm();
+};
+
+const startEditRouletteSet = (id) => {
+  const setItem = state.data.rouletteSets.find((item) => item.id === id);
+  if (!setItem) return;
+  state.rouletteEditingId = id;
+  elements.rouletteSetName.value = setItem.name;
+  elements.rouletteSetOptions.value = setItem.options.join("\n");
+  if (elements.btnCancelRouletteEdit) {
+    elements.btnCancelRouletteEdit.classList.remove("hidden");
+  }
+  setActiveTab("settings");
+};
+
+const deleteRouletteSet = (id) => {
+  if (!confirm("Vols eliminar aquest conjunt?")) return;
+  state.data.rouletteSets = state.data.rouletteSets.filter((item) => item.id !== id);
+  if (state.data.lastRouletteSetId === id) {
+    state.data.lastRouletteSetId = "";
+  }
+  saveData();
+  renderRouletteSetCards();
+  renderRouletteSetSelect();
+};
+
+const selectRouletteSet = (id) => {
+  state.data.lastRouletteSetId = id;
+  saveData();
+  renderRouletteSetSelect();
+  loadRouletteSetOptions(id);
+  setActiveTab("dice-wheel");
+  if (elements.sidebar) {
+    elements.sidebar.classList.remove("open");
+  }
+  if (elements.sidebarBackdrop) {
+    elements.sidebarBackdrop.classList.remove("visible");
+  }
+};
+
+const loadRouletteSetOptions = (id) => {
+  if (!elements.rouletteOptions) return;
+  const setItem = state.data.rouletteSets.find((item) => item.id === id);
+  if (!setItem) {
+    return;
+  }
+  elements.rouletteOptions.value = setItem.options.join("\n");
+  buildRoulette(setItem.options);
 };
 
 const resetForm = () => {
@@ -1299,6 +1446,11 @@ const importData = (file) => {
       saveData();
       renderClassCards();
       renderClassSelects();
+      renderRouletteSetCards();
+      renderRouletteSetSelect();
+      if (state.data.lastRouletteSetId) {
+        loadRouletteSetOptions(state.data.lastRouletteSetId);
+      }
       elements.groupSize.value = state.data.lastGroupSize || 3;
       if (elements.timerSound) {
         elements.timerSound.value = state.data.timerSound || "beep_long";
@@ -1324,12 +1476,18 @@ const handleReset = () => {
   state.data = defaultData();
   renderClassCards();
   renderClassSelects();
+  renderRouletteSetCards();
+  renderRouletteSetSelect();
   resetForm();
   elements.groupsStudents.value = "";
   elements.groupsResult.innerHTML = "";
   elements.pickerList.value = "";
   elements.pickerAnimation.textContent = "Preparat/da?";
   elements.pickerResult.textContent = "";
+  if (elements.rouletteOptions) {
+    elements.rouletteOptions.value = "";
+    buildRoulette([]);
+  }
   if (elements.timerSound) {
     elements.timerSound.value = state.data.timerSound;
   }
@@ -1401,10 +1559,16 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.dieOneCube = elements.dieOne ? elements.dieOne.querySelector(".cube") : null;
   elements.dieTwoCube = elements.dieTwo ? elements.dieTwo.querySelector(".cube") : null;
   elements.diceSum = $("dice-sum");
+  elements.rouletteSaved = $("roulette-saved");
   elements.rouletteOptions = $("roulette-options");
   elements.btnSpinRoulette = $("btn-spin-roulette");
   elements.rouletteWheel = $("roulette-wheel");
   elements.rouletteResult = $("roulette-result");
+  elements.rouletteSetName = $("roulette-set-name");
+  elements.rouletteSetOptions = $("roulette-set-options");
+  elements.btnSaveRouletteSet = $("btn-save-roulette-set");
+  elements.btnCancelRouletteEdit = $("btn-cancel-roulette-edit");
+  elements.rouletteSetList = $("roulette-set-list");
   elements.btnReset = $("btn-reset");
 
   state.data = loadData();
@@ -1413,6 +1577,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderClassCards();
   renderClassSelects();
+  renderRouletteSetCards();
+  renderRouletteSetSelect();
+  if (state.data.lastRouletteSetId) {
+    loadRouletteSetOptions(state.data.lastRouletteSetId);
+  }
   elements.groupSize.value = state.data.lastGroupSize || 3;
 
   addTapListener(elements.btnEnter, () => renderApp());
@@ -1518,6 +1687,9 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.turnClass.value = "";
         renderTurnClassChips();
       }
+      if (elements.rouletteSaved) {
+        elements.rouletteSaved.value = "";
+      }
       if (elements.sidebar) {
         elements.sidebar.classList.remove("open");
       }
@@ -1567,6 +1739,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (elements.btnSpinRoulette) {
     addTapListener(elements.btnSpinRoulette, spinRoulette);
+  }
+  if (elements.rouletteSaved) {
+    elements.rouletteSaved.addEventListener("change", (event) => {
+      state.data.lastRouletteSetId = event.target.value;
+      saveData();
+      if (event.target.value) {
+        loadRouletteSetOptions(event.target.value);
+      }
+    });
+  }
+  if (elements.btnSaveRouletteSet) {
+    addTapListener(elements.btnSaveRouletteSet, saveRouletteSet);
+  }
+  if (elements.btnCancelRouletteEdit) {
+    addTapListener(elements.btnCancelRouletteEdit, resetRouletteSetForm);
   }
 
   if (elements.alertModalClose) {
