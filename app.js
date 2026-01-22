@@ -36,6 +36,11 @@ const state = {
     handledLong: false,
   },
   audioContext: null,
+  diceCount: 1,
+  diceRolling: false,
+  rouletteRotation: 0,
+  rouletteSpinning: false,
+  rouletteLastIndex: null,
 };
 
 const elements = {};
@@ -983,6 +988,187 @@ const adjustTimerStepLong = (delta) => {
   setTimerSeconds(state.timerSeconds + delta * 5);
 };
 
+const updateDiceUI = () => {
+  if (!elements.diceCount || !elements.diceSum || !elements.dieTwo) return;
+  state.diceCount = Number(elements.diceCount.value) || 1;
+  if (state.diceCount === 2) {
+    elements.dieTwo.classList.remove("hidden");
+    elements.diceSum.classList.remove("hidden");
+  } else {
+    elements.dieTwo.classList.add("hidden");
+    elements.diceSum.classList.add("hidden");
+  }
+};
+
+const rollSingleDie = (cube, finalFace) => {
+  if (!cube) return;
+  const rotations = {
+    1: { x: 0, y: 0 },
+    2: { x: 0, y: -90 },
+    3: { x: 0, y: 180 },
+    4: { x: 0, y: 90 },
+    5: { x: -90, y: 0 },
+    6: { x: 90, y: 0 },
+  };
+  const start = performance.now();
+  const duration = 2600;
+  const startX = Math.random() * 360;
+  const startY = Math.random() * 360;
+  const turnsX = 2 + Math.floor(Math.random() * 3);
+  const turnsY = 2 + Math.floor(Math.random() * 3);
+  const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+  const target = rotations[finalFace];
+  const totalX = target.x + turnsX * 360;
+  const totalY = target.y + turnsY * 360;
+
+  const animate = (now) => {
+    const progress = Math.min(1, (now - start) / duration);
+    const eased = easeOut(progress);
+    const x = startX + (totalX - startX) * eased;
+    const y = startY + (totalY - startY) * eased;
+    cube.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      cube.style.transform = `rotateX(${totalX}deg) rotateY(${totalY}deg)`;
+    }
+  };
+  requestAnimationFrame(animate);
+};
+
+const rollDice = () => {
+  if (state.diceRolling || !elements.dieOneCube) return;
+  state.diceRolling = true;
+  updateDiceUI();
+  const face1 = Math.floor(Math.random() * 6) + 1;
+  const face2 = Math.floor(Math.random() * 6) + 1;
+  rollSingleDie(elements.dieOneCube, face1);
+  if (state.diceCount === 2 && elements.dieTwoCube) {
+    rollSingleDie(elements.dieTwoCube, face2);
+  }
+  setTimeout(() => {
+    if (state.diceCount === 2 && elements.diceSum) {
+      elements.diceSum.textContent = String(face1 + face2);
+    }
+    state.diceRolling = false;
+  }, 2800);
+};
+
+const getRandomIndex = (max) => {
+  if (max <= 1) return 0;
+  if (window.crypto && window.crypto.getRandomValues) {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return array[0] % max;
+  }
+  return Math.floor(Math.random() * max);
+};
+
+const buildRoulette = (options) => {
+  if (!elements.rouletteWheel || !elements.rouletteResult) return;
+  elements.rouletteWheel.innerHTML = "";
+  if (options.length === 0) {
+    elements.rouletteWheel.style.background =
+      "conic-gradient(#e3e9fb 0deg, #f5f7ff 360deg)";
+    elements.rouletteResult.textContent = "Afegeix opcions per començar";
+    return;
+  }
+  const segment = 360 / options.length;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "roulette-svg");
+  svg.setAttribute("viewBox", "0 0 320 320");
+  svg.setAttribute("aria-hidden", "true");
+
+  const cx = 160;
+  const cy = 160;
+  const outerRadius = 160;
+  const textRadius = 95;
+
+  options.forEach((option, index) => {
+    const startAngle = -90 + index * segment;
+    const endAngle = -90 + (index + 1) * segment;
+    const midAngle = startAngle + segment / 2;
+    const largeArc = segment > 180 ? 1 : 0;
+    const hue = Math.round((360 / options.length) * index);
+    const color = `hsl(${hue} 78% 58%)`;
+
+    const start = (startAngle * Math.PI) / 180;
+    const end = (endAngle * Math.PI) / 180;
+    const x1 = cx + Math.cos(start) * outerRadius;
+    const y1 = cy + Math.sin(start) * outerRadius;
+    const x2 = cx + Math.cos(end) * outerRadius;
+    const y2 = cy + Math.sin(end) * outerRadius;
+
+    const slice = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    slice.setAttribute(
+      "d",
+      `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2.toFixed(
+        2
+      )} ${y2.toFixed(2)} Z`
+    );
+    slice.setAttribute("fill", color);
+    slice.setAttribute("stroke", "#ffffff");
+    slice.setAttribute("stroke-width", "2");
+    svg.appendChild(slice);
+
+    const pathId = `roulette-path-${index}`;
+    const textStart = (startAngle * Math.PI) / 180;
+    const textEnd = (endAngle * Math.PI) / 180;
+    const tx1 = cx + Math.cos(textStart) * textRadius;
+    const ty1 = cy + Math.sin(textStart) * textRadius;
+    const tx2 = cx + Math.cos(textEnd) * textRadius;
+    const ty2 = cy + Math.sin(textEnd) * textRadius;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("id", pathId);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "none");
+    path.setAttribute(
+      "d",
+      `M ${tx1.toFixed(2)} ${ty1.toFixed(2)} A ${textRadius} ${textRadius} 0 ${largeArc} 1 ${tx2.toFixed(
+        2
+      )} ${ty2.toFixed(2)}`
+    );
+    svg.appendChild(path);
+
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const textPath = document.createElementNS("http://www.w3.org/2000/svg", "textPath");
+    textPath.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", `#${pathId}`);
+    textPath.setAttribute("startOffset", "50%");
+    textPath.setAttribute("text-anchor", "middle");
+    textPath.textContent = option;
+    text.appendChild(textPath);
+    svg.appendChild(text);
+  });
+
+  elements.rouletteWheel.appendChild(svg);
+};
+
+const spinRoulette = () => {
+  if (state.rouletteSpinning) return;
+  const options = parseList(elements.rouletteOptions.value);
+  if (options.length < 2) {
+    showAlert("Introdueix almenys 2 opcions per girar la ruleta.");
+    return;
+  }
+  buildRoulette(options);
+  state.rouletteSpinning = true;
+  const segment = 360 / options.length;
+  let targetIndex = getRandomIndex(options.length);
+  if (options.length > 1 && state.rouletteLastIndex === targetIndex) {
+    targetIndex = (targetIndex + 1) % options.length;
+  }
+  state.rouletteLastIndex = targetIndex;
+  const spins = 4 + Math.floor(Math.random() * 3);
+  const totalRotation = spins * 360 - (targetIndex * segment + segment / 2);
+  state.rouletteRotation = totalRotation;
+  elements.rouletteWheel.style.transform = `rotate(${totalRotation}deg)`;
+  setTimeout(() => {
+    elements.rouletteResult.textContent = options[targetIndex];
+    state.rouletteSpinning = false;
+  }, 3600);
+};
+
 const startTimerHold = (delta) => {
   if (state.timer.running) return;
   clearTimeout(state.timerHold.timeoutId);
@@ -1208,6 +1394,17 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.btnTimerMinus = $("btn-timer-minus");
   elements.btnTimerPlus = $("btn-timer-plus");
   elements.timerCustomDisplay = $("timer-custom-display");
+  elements.diceCount = $("dice-count");
+  elements.btnRollDice = $("btn-roll-dice");
+  elements.dieOne = document.querySelector(".die-1");
+  elements.dieTwo = document.querySelector(".die-2");
+  elements.dieOneCube = elements.dieOne ? elements.dieOne.querySelector(".cube") : null;
+  elements.dieTwoCube = elements.dieTwo ? elements.dieTwo.querySelector(".cube") : null;
+  elements.diceSum = $("dice-sum");
+  elements.rouletteOptions = $("roulette-options");
+  elements.btnSpinRoulette = $("btn-spin-roulette");
+  elements.rouletteWheel = $("roulette-wheel");
+  elements.rouletteResult = $("roulette-result");
   elements.btnReset = $("btn-reset");
 
   state.data = loadData();
@@ -1356,6 +1553,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  if (elements.btnRollDice) {
+    addTapListener(elements.btnRollDice, rollDice);
+  }
+  if (elements.diceCount) {
+    elements.diceCount.addEventListener("change", updateDiceUI);
+  }
+  if (elements.rouletteOptions) {
+    elements.rouletteOptions.addEventListener("input", (event) => {
+      const options = parseList(event.target.value);
+      buildRoulette(options);
+    });
+  }
+  if (elements.btnSpinRoulette) {
+    addTapListener(elements.btnSpinRoulette, spinRoulette);
+  }
+
   if (elements.alertModalClose) {
     addTapListener(elements.alertModalClose, hideModal);
     elements.alertModalClose.addEventListener("click", (event) => {
@@ -1385,4 +1598,8 @@ document.addEventListener("DOMContentLoaded", () => {
   resizeCelebrationCanvas();
   hideModal();
   updateTimerUI();
+  updateDiceUI();
+  if (elements.rouletteOptions) {
+    buildRoulette(parseList(elements.rouletteOptions.value));
+  }
 });

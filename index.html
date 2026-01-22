@@ -68,6 +68,7 @@
             <button class="btn tab" data-target="picker">Selector d’atzar</button>
             <button class="btn tab" data-target="turns">Selector de torns</button>
             <button class="btn tab" data-target="timer">Temporitzador</button>
+            <button class="btn tab" data-target="dice-wheel">Dau i ruleta</button>
             <button class="btn tab" data-target="settings">Configuració</button>
           </div>
         </div>
@@ -190,6 +191,59 @@
                 <div id="timer-display" class="timer-display">10:00</div>
               </div>
               <div id="timer-status" class="timer-status">Preparat/da</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dice-wheel" class="panel">
+          <h2>Dau i ruleta virtual</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Dau animat</h3>
+              <label for="dice-count">Nombre de daus</label>
+              <select id="dice-count">
+                <option value="1">1 dau</option>
+                <option value="2">2 daus</option>
+              </select>
+              <div class="row">
+                <button id="btn-roll-dice" class="btn primary">Tirar el dau</button>
+              </div>
+              <div class="dice-tray">
+                <div class="die die-1">
+                  <div class="cube">
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                  </div>
+                </div>
+                <div class="die die-2 hidden">
+                  <div class="cube">
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                  </div>
+                </div>
+              </div>
+              <div id="dice-sum" class="dice-sum hidden">2</div>
+            </div>
+            <div class="card">
+              <h3>Ruleta amb opcions</h3>
+              <label for="roulette-options">Opcions (una per línia)</label>
+              <textarea id="roulette-options" rows="6" placeholder="Pregunta 1&#10;Repte 2&#10;Tema 3"></textarea>
+              <div class="row">
+                <button id="btn-spin-roulette" class="btn primary">Girar ruleta</button>
+              </div>
+              <div class="roulette-stage">
+                <div id="roulette-wheel" class="roulette-wheel"></div>
+                <div class="roulette-pointer">▼</div>
+              </div>
+              <div id="roulette-result" class="roulette-result">Preparat/da?</div>
             </div>
           </div>
         </div>
