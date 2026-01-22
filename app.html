@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Pot de la Sort</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top-bar">
+        <div class="brand">
+          <img class="brand-icon" src="favicon.svg" alt="El Pot de la Sort" />
+          <div>
+            <h1>El Pot de la Sort</h1>
+            <p>Una eina divertida i justa per crear grups i escollir persones a l’atzar a l’aula</p>
+          </div>
+        </div>
+        <a href="index.html" class="btn ghost">Tornar a l’inici</a>
+      </header>
+
+      <section id="app" class="section">
+        <button id="btn-burger" class="btn burger" aria-label="Obrir menú">☰</button>
+        <div id="sidebar" class="sidebar" aria-label="Menú principal">
+          <div class="sidebar-header">
+            <span>Menú</span>
+            <button id="btn-close-sidebar" class="btn ghost" aria-label="Tancar menú">✕</button>
+          </div>
+          <div class="sidebar-links">
+            <button class="btn tab active" data-target="config">Configuració d’aules</button>
+            <button class="btn tab" data-target="groups">Generador de grups</button>
+            <button class="btn tab" data-target="picker">Selector d’atzar</button>
+            <button class="btn tab" data-target="turns">Selector de torns</button>
+            <button class="btn tab" data-target="timer">Temporitzador</button>
+            <button class="btn tab" data-target="dice-wheel">Dau i ruleta</button>
+            <button class="btn tab" data-target="settings">Configuració</button>
+          </div>
+        </div>
+        <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+        <div id="config" class="panel active">
+          <h2>Configuració d’aules</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Crear o editar aula</h3>
+              <label for="class-name">Nom de la classe</label>
+              <input id="class-name" type="text" placeholder="Ex: 2n ESO A" />
+              <label for="class-students">Llista d’alumnes (un nom per línia)</label>
+              <textarea id="class-students" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
+              <div class="row">
+                <button id="btn-save-class" class="btn primary">Desar aula</button>
+                <button id="btn-cancel-edit" class="btn ghost hidden">Cancel·lar edició</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Aules desades</h3>
+              <div id="class-list" class="cards"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="groups" class="panel">
+          <h2>Generador de grups aleatoris</h2>
+          <div class="grid-2">
+            <div class="card">
+              <label for="groups-class">Selecciona una aula</label>
+              <select id="groups-class"></select>
+              <label for="groups-students">Edició ràpida d’alumnes</label>
+              <textarea id="groups-students" rows="8" placeholder="Carrega una aula per editar"></textarea>
+              <label for="group-size">Nombre d’alumnes per grup</label>
+              <input id="group-size" type="number" min="2" value="3" />
+              <div class="row">
+                <button id="btn-generate-groups" class="btn primary">Crear grups aleatòriament</button>
+                <button id="btn-export-pdf" class="btn">Exportar a PDF</button>
+              </div>
+              <p class="hint">Els grups es reparteixen de forma equilibrada i sense alumnes sols si és possible.</p>
+            </div>
+            <div class="card">
+              <h3>Resultat dels grups</h3>
+              <div id="groups-result" class="cards groups"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="picker" class="panel">
+          <h2>Selector d’una persona a l’atzar</h2>
+          <div class="grid-2">
+            <div class="card">
+              <label for="picker-class">Selecciona una aula (opcional)</label>
+              <select id="picker-class"></select>
+              <div id="picker-class-students" class="turn-chips"></div>
+              <label for="picker-list">O introdueix una llista manual</label>
+              <textarea id="picker-list" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
+              <button id="btn-pick" class="btn primary">Escollir una persona a l’atzar</button>
+            </div>
+            <div class="card">
+              <h3>Resultat</h3>
+              <div class="picker-stage">
+                <div id="picker-animation" class="picker-animation">Preparat/da?</div>
+                <div id="picker-result" class="picker-result"></div>
+                <canvas id="picker-celebration" class="celebration-canvas" aria-hidden="true"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="turns" class="panel">
+          <h2>Selector de torn continu</h2>
+          <div class="grid-2">
+            <div class="card">
+              <label for="turn-class">Selecciona una aula (opcional)</label>
+              <select id="turn-class"></select>
+              <div id="turn-class-students" class="turn-chips"></div>
+              <label for="turn-list">O introdueix una llista manual</label>
+              <textarea id="turn-list" rows="6" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
+              <div class="row">
+                <button id="btn-turn-start" class="btn primary">Començar torns</button>
+                <button id="btn-turn-next" class="btn">Següent torn</button>
+                <button id="btn-turn-reset" class="btn ghost">Reiniciar torns</button>
+              </div>
+              <div id="turn-current" class="turn-current">Preparat/da per començar?</div>
+            </div>
+            <div class="card">
+              <h3>Ordre dels torns</h3>
+              <div id="turn-list-display" class="turn-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="timer" class="panel">
+          <h2>Temporitzador visual per a activitats</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Selecciona una durada</h3>
+              <div class="row">
+                <button class="btn timer-preset" data-minutes="5">5 min</button>
+                <button class="btn timer-preset" data-minutes="10">10 min</button>
+                <button class="btn timer-preset" data-minutes="15">15 min</button>
+                <button class="btn timer-preset" data-minutes="20">20 min</button>
+              </div>
+              <div class="timer-stepper">
+                <button id="btn-timer-minus" class="btn ghost" type="button" aria-label="Restar un minut">-</button>
+                <div id="timer-custom-display" class="timer-custom-display">10 minuts</div>
+                <button id="btn-timer-plus" class="btn ghost" type="button" aria-label="Afegir un minut">+</button>
+              </div>
+              <p class="timer-hint">Mantén premut per saltar de 5 minuts.</p>
+              <div class="row">
+                <button id="btn-timer-start" class="btn primary">Iniciar</button>
+                <button id="btn-timer-pause" class="btn">Pausa</button>
+                <button id="btn-timer-reset" class="btn ghost">Reiniciar</button>
+              </div>
+            </div>
+            <div class="card timer-card">
+              <div id="timer-circle" class="timer-circle" role="img" aria-label="Temporitzador">
+                <div id="timer-display" class="timer-display">10:00</div>
+              </div>
+              <div id="timer-status" class="timer-status">Preparat/da</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dice-wheel" class="panel">
+          <h2>Dau i ruleta virtual</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Dau animat</h3>
+              <label for="dice-count">Nombre de daus</label>
+              <select id="dice-count">
+                <option value="1">1 dau</option>
+                <option value="2">2 daus</option>
+              </select>
+              <div class="row">
+                <button id="btn-roll-dice" class="btn primary">Tirar el dau</button>
+              </div>
+              <div class="dice-tray">
+                <div class="die die-1">
+                  <div class="cube">
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                  </div>
+                </div>
+                <div class="die die-2 hidden">
+                  <div class="cube">
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                    <div class="face"></div>
+                  </div>
+                </div>
+              </div>
+              <div id="dice-sum" class="dice-sum hidden">2</div>
+            </div>
+            <div class="card">
+              <h3>Ruleta amb opcions</h3>
+              <label for="roulette-saved">Selecciona opcions guardades</label>
+              <select id="roulette-saved"></select>
+              <label for="roulette-options">Opcions (una per línia)</label>
+              <textarea id="roulette-options" rows="6" placeholder="Pregunta 1&#10;Repte 2&#10;Tema 3"></textarea>
+              <div class="row">
+                <button id="btn-spin-roulette" class="btn primary">Girar ruleta</button>
+              </div>
+              <div class="roulette-stage">
+                <div id="roulette-wheel" class="roulette-wheel"></div>
+                <div class="roulette-pointer">▼</div>
+              </div>
+              <div id="roulette-result" class="roulette-result">Preparat/da?</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="settings" class="panel">
+          <h2>Configuració</h2>
+          <div class="card">
+            <h3>Opcions guardades de la ruleta</h3>
+            <label for="roulette-set-name">Nom del conjunt</label>
+            <input id="roulette-set-name" type="text" placeholder="Ex: Preguntes ràpides" />
+            <label for="roulette-set-options">Opcions (una per línia)</label>
+            <textarea id="roulette-set-options" rows="6" placeholder="Opció 1&#10;Opció 2&#10;Opció 3"></textarea>
+            <div class="row">
+              <button id="btn-save-roulette-set" class="btn primary">Desar conjunt</button>
+              <button id="btn-cancel-roulette-edit" class="btn ghost hidden">Cancel·lar edició</button>
+            </div>
+            <div id="roulette-set-list" class="cards"></div>
+          </div>
+          <div class="card">
+            <h3>So del temporitzador</h3>
+            <label for="timer-sound">Selecciona un so de finalització</label>
+            <select id="timer-sound">
+              <option value="beep_long">Xiulet suau</option>
+              <option value="whistle">Xiulet esportiu</option>
+              <option value="bell">Campanades d'església</option>
+              <option value="police_siren">Sirena de policia</option>
+              <option value="air_raid_siren">Sirena d'atac aeri</option>
+              <option value="siren">Sirena d'alarma</option>
+            </select>
+            <label for="timer-sound-duration">Durada del so (segons)</label>
+            <div class="timer-stepper">
+              <button id="btn-sound-minus" class="btn ghost" type="button" aria-label="Restar un segon">-</button>
+              <div id="timer-sound-duration" class="timer-custom-display">2 segons</div>
+              <button id="btn-sound-plus" class="btn ghost" type="button" aria-label="Afegir un segon">+</button>
+            </div>
+            <div class="row">
+              <button id="btn-timer-sound-test" class="btn">Provar so</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Exportar i importar dades</h3>
+            <p>
+              Desa un fitxer de seguretat amb les aules i configuracions, o restaura’l quan ho necessitis.
+            </p>
+            <div class="row">
+              <button id="btn-export-data" class="btn primary">Exportar dades</button>
+              <button id="btn-import-data" class="btn">Importar dades</button>
+              <input id="import-file" type="file" accept="application/json" class="hidden" />
+            </div>
+          </div>
+          <div class="card danger">
+            <h3>Reinici total</h3>
+            <p>
+              Esborra totes les dades guardades (aules, alumnes i configuracions). Aquesta acció és irreversible.
+            </p>
+            <button id="btn-reset" class="btn danger">Esborrar totes les dades</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="alert-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title">
+      <div class="modal-content">
+        <h3 id="alert-modal-title">Avís</h3>
+        <p id="alert-modal-message"></p>
+        <button id="alert-modal-close" class="btn primary" type="button">D'acord</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -4,317 +4,218 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>El Pot de la Sort</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <div class="app">
-      <header class="top-bar">
-        <div class="brand">
+    <div class="landing-app">
+      <header class="landing-header">
+        <div class="landing-brand">
           <img class="brand-icon" src="favicon.svg" alt="El Pot de la Sort" />
           <div>
             <h1>El Pot de la Sort</h1>
-            <p>Una eina divertida i justa per crear grups i escollir persones a l’atzar a l’aula</p>
+            <p>Solucions educatives per a una aula més justa i dinàmica</p>
           </div>
         </div>
-        <button id="btn-go-landing" class="btn ghost">Tornar a l’inici</button>
+        <nav class="landing-nav">
+          <a href="#hero">Inici</a>
+          <a href="#aules">Aules</a>
+          <a href="#grups">Grups</a>
+          <a href="#atzar">Atzar</a>
+          <a href="#torns">Torns</a>
+          <a href="#temps">Temporitzador</a>
+          <a href="#dau">Dau i ruleta</a>
+        </nav>
+        <a href="app.html" class="btn primary">Entrar</a>
       </header>
 
-      <section id="landing" class="section landing">
-        <div class="landing-hero">
-          <div class="landing-text">
-            <h2>El Pot de la Sort</h2>
-            <p class="lead">
-              Crea grups equilibrats i escull persones a l’atzar amb un sol toc. Dissenyada per a
-              l’aula, ràpida i visual.
-            </p>
-            <div class="landing-features">
-              <div class="feature-card">
-                <span>👥</span>
-                <p>Creació de grups aleatoris i equilibrats</p>
-              </div>
-              <div class="feature-card">
-                <span>🎲</span>
-                <p>Selecció d’una persona a l’atzar amb espectació visual</p>
-              </div>
-              <div class="feature-card">
-                <span>⏱️</span>
-                <p>Estalvi de temps al professorat amb aules guardades</p>
-              </div>
-            </div>
-            <button id="btn-enter" class="btn primary big">Entrar a l’aplicació</button>
+      <section id="hero" class="hero">
+        <div class="hero-content">
+          <h2>El Pot de la Sort</h2>
+          <p>
+            Una eina visual i elegant per organitzar activitats d’aula amb equitat. Pensada per a
+            pissarres digitals i ús tàctil, amb una experiència clara i professional.
+          </p>
+          <div class="hero-actions">
+            <a href="app.html" class="btn primary big">Entrar a l’aplicació</a>
+            <a href="#aules" class="btn ghost">Veure funcionalitats</a>
           </div>
-          <div class="landing-illustration">
-            <div class="card-stack">
-              <div class="floating-card">A</div>
-              <div class="floating-card">B</div>
-              <div class="floating-card">C</div>
+        </div>
+        <div class="hero-image">
+          <img
+            src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=80"
+            alt="Alumna a l’aula"
+          />
+        </div>
+      </section>
+
+      <section id="aules" class="feature-band band-blue">
+        <div class="band-content feature-split">
+          <div>
+            <div class="icon-box">
+              <i class="fa-solid fa-chalkboard-user"></i>
             </div>
-            <p class="caption">Pensada per a pissarres digitals i ús tàctil</p>
+            <h3>Configuració d’aules</h3>
+            <p>
+              Crea i guarda aules amb la llista d’alumnes perquè tot estigui preparat abans d’entrar a classe.
+              Aquesta secció et permet editar noms ràpidament, recuperar dades automàticament i començar
+              activitats sense perdre temps en tasques administratives.
+            </p>
+            <p>
+              Ideal per a docents que treballen amb diferents grups i volen una gestió clara, ordenada i
+              consistent al llarg del curs.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="images/aulas.jpg"
+              alt="Configuració d’aules"
+            />
           </div>
         </div>
       </section>
 
-      <section id="app" class="section hidden">
-        <button id="btn-burger" class="btn burger" aria-label="Obrir menú">☰</button>
-        <div id="sidebar" class="sidebar" aria-label="Menú principal">
-          <div class="sidebar-header">
-            <span>Menú</span>
-            <button id="btn-close-sidebar" class="btn ghost" aria-label="Tancar menú">✕</button>
-          </div>
-          <div class="sidebar-links">
-            <button class="btn tab active" data-target="config">Configuració d’aules</button>
-            <button class="btn tab" data-target="groups">Generador de grups</button>
-            <button class="btn tab" data-target="picker">Selector d’atzar</button>
-            <button class="btn tab" data-target="turns">Selector de torns</button>
-            <button class="btn tab" data-target="timer">Temporitzador</button>
-            <button class="btn tab" data-target="dice-wheel">Dau i ruleta</button>
-            <button class="btn tab" data-target="settings">Configuració</button>
-          </div>
-        </div>
-        <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
-
-        <div id="config" class="panel active">
-          <h2>Configuració d’aules</h2>
-          <div class="grid-2">
-            <div class="card">
-              <h3>Crear o editar aula</h3>
-              <label for="class-name">Nom de la classe</label>
-              <input id="class-name" type="text" placeholder="Ex: 2n ESO A" />
-              <label for="class-students">Llista d’alumnes (un nom per línia)</label>
-              <textarea id="class-students" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
-              <div class="row">
-                <button id="btn-save-class" class="btn primary">Desar aula</button>
-                <button id="btn-cancel-edit" class="btn ghost hidden">Cancel·lar edició</button>
-              </div>
+      <section id="grups" class="feature-band band-sky">
+        <div class="band-content feature-split reverse">
+          <div>
+            <div class="icon-box">
+              <i class="fa-solid fa-people-group"></i>
             </div>
-            <div class="card">
-              <h3>Aules desades</h3>
-              <div id="class-list" class="cards"></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="groups" class="panel">
-          <h2>Generador de grups aleatoris</h2>
-          <div class="grid-2">
-            <div class="card">
-              <label for="groups-class">Selecciona una aula</label>
-              <select id="groups-class"></select>
-              <label for="groups-students">Edició ràpida d’alumnes</label>
-              <textarea id="groups-students" rows="8" placeholder="Carrega una aula per editar"></textarea>
-              <label for="group-size">Nombre d’alumnes per grup</label>
-              <input id="group-size" type="number" min="2" value="3" />
-              <div class="row">
-                <button id="btn-generate-groups" class="btn primary">Crear grups aleatòriament</button>
-                <button id="btn-export-pdf" class="btn">Exportar a PDF</button>
-              </div>
-              <p class="hint">Els grups es reparteixen de forma equilibrada i sense alumnes sols si és possible.</p>
-            </div>
-            <div class="card">
-              <h3>Resultat dels grups</h3>
-              <div id="groups-result" class="cards groups"></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="picker" class="panel">
-          <h2>Selector d’una persona a l’atzar</h2>
-          <div class="grid-2">
-            <div class="card">
-              <label for="picker-class">Selecciona una aula (opcional)</label>
-              <select id="picker-class"></select>
-              <div id="picker-class-students" class="turn-chips"></div>
-              <label for="picker-list">O introdueix una llista manual</label>
-              <textarea id="picker-list" rows="8" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
-              <button id="btn-pick" class="btn primary">Escollir una persona a l’atzar</button>
-            </div>
-            <div class="card">
-              <h3>Resultat</h3>
-              <div class="picker-stage">
-              <div id="picker-animation" class="picker-animation">Preparat/da?</div>
-              <div id="picker-result" class="picker-result"></div>
-                <canvas id="picker-celebration" class="celebration-canvas" aria-hidden="true"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="turns" class="panel">
-          <h2>Selector de torn continu</h2>
-          <div class="grid-2">
-            <div class="card">
-              <label for="turn-class">Selecciona una aula (opcional)</label>
-              <select id="turn-class"></select>
-              <div id="turn-class-students" class="turn-chips"></div>
-              <label for="turn-list">O introdueix una llista manual</label>
-              <textarea id="turn-list" rows="6" placeholder="Nom 1&#10;Nom 2&#10;Nom 3"></textarea>
-              <div class="row">
-                <button id="btn-turn-start" class="btn primary">Començar torns</button>
-                <button id="btn-turn-next" class="btn">Següent torn</button>
-                <button id="btn-turn-reset" class="btn ghost">Reiniciar torns</button>
-              </div>
-              <div id="turn-current" class="turn-current">Preparat/da per començar?</div>
-            </div>
-            <div class="card">
-              <h3>Ordre dels torns</h3>
-              <div id="turn-list-display" class="turn-list"></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="timer" class="panel">
-          <h2>Temporitzador visual per a activitats</h2>
-          <div class="grid-2">
-            <div class="card">
-              <h3>Selecciona una durada</h3>
-              <div class="row">
-                <button class="btn timer-preset" data-minutes="5">5 min</button>
-                <button class="btn timer-preset" data-minutes="10">10 min</button>
-                <button class="btn timer-preset" data-minutes="15">15 min</button>
-                <button class="btn timer-preset" data-minutes="20">20 min</button>
-              </div>
-              <div class="timer-stepper">
-                <button id="btn-timer-minus" class="btn ghost" type="button" aria-label="Restar un minut">-</button>
-                <div id="timer-custom-display" class="timer-custom-display">10 minuts</div>
-                <button id="btn-timer-plus" class="btn ghost" type="button" aria-label="Afegir un minut">+</button>
-              </div>
-              <p class="timer-hint">Mantén premut per saltar de 5 minuts.</p>
-              <div class="row">
-                <button id="btn-timer-start" class="btn primary">Iniciar</button>
-                <button id="btn-timer-pause" class="btn">Pausa</button>
-                <button id="btn-timer-reset" class="btn ghost">Reiniciar</button>
-              </div>
-            </div>
-            <div class="card timer-card">
-              <div id="timer-circle" class="timer-circle" role="img" aria-label="Temporitzador">
-                <div id="timer-display" class="timer-display">10:00</div>
-              </div>
-              <div id="timer-status" class="timer-status">Preparat/da</div>
-            </div>
-          </div>
-        </div>
-
-        <div id="dice-wheel" class="panel">
-          <h2>Dau i ruleta virtual</h2>
-          <div class="grid-2">
-            <div class="card">
-              <h3>Dau animat</h3>
-              <label for="dice-count">Nombre de daus</label>
-              <select id="dice-count">
-                <option value="1">1 dau</option>
-                <option value="2">2 daus</option>
-              </select>
-              <div class="row">
-                <button id="btn-roll-dice" class="btn primary">Tirar el dau</button>
-              </div>
-              <div class="dice-tray">
-                <div class="die die-1">
-                  <div class="cube">
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                  </div>
-                </div>
-                <div class="die die-2 hidden">
-                  <div class="cube">
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                    <div class="face"></div>
-                  </div>
-                </div>
-              </div>
-              <div id="dice-sum" class="dice-sum hidden">2</div>
-            </div>
-            <div class="card">
-              <h3>Ruleta amb opcions</h3>
-              <label for="roulette-saved">Selecciona opcions guardades</label>
-              <select id="roulette-saved"></select>
-              <label for="roulette-options">Opcions (una per línia)</label>
-              <textarea id="roulette-options" rows="6" placeholder="Pregunta 1&#10;Repte 2&#10;Tema 3"></textarea>
-              <div class="row">
-                <button id="btn-spin-roulette" class="btn primary">Girar ruleta</button>
-              </div>
-              <div class="roulette-stage">
-                <div id="roulette-wheel" class="roulette-wheel"></div>
-                <div class="roulette-pointer">▼</div>
-              </div>
-              <div id="roulette-result" class="roulette-result">Preparat/da?</div>
-            </div>
-          </div>
-        </div>
-
-        <div id="settings" class="panel">
-          <h2>Configuració</h2>
-          <div class="card">
-            <h3>Opcions guardades de la ruleta</h3>
-            <label for="roulette-set-name">Nom del conjunt</label>
-            <input id="roulette-set-name" type="text" placeholder="Ex: Preguntes ràpides" />
-            <label for="roulette-set-options">Opcions (una per línia)</label>
-            <textarea id="roulette-set-options" rows="6" placeholder="Opció 1&#10;Opció 2&#10;Opció 3"></textarea>
-            <div class="row">
-              <button id="btn-save-roulette-set" class="btn primary">Desar conjunt</button>
-              <button id="btn-cancel-roulette-edit" class="btn ghost hidden">Cancel·lar edició</button>
-            </div>
-            <div id="roulette-set-list" class="cards"></div>
-          </div>
-          <div class="card">
-            <h3>So del temporitzador</h3>
-            <label for="timer-sound">Selecciona un so de finalització</label>
-            <select id="timer-sound">
-              <option value="beep_long">Xiulet suau</option>
-              <option value="whistle">Xiulet esportiu</option>
-              <option value="bell">Campanades d'església</option>
-              <option value="police_siren">Sirena de policia</option>
-              <option value="air_raid_siren">Sirena d'atac aeri</option>
-              <option value="siren">Sirena d'alarma</option>
-            </select>
-            <label for="timer-sound-duration">Durada del so (segons)</label>
-            <div class="timer-stepper">
-              <button id="btn-sound-minus" class="btn ghost" type="button" aria-label="Restar un segon">-</button>
-              <div id="timer-sound-duration" class="timer-custom-display">2 segons</div>
-              <button id="btn-sound-plus" class="btn ghost" type="button" aria-label="Afegir un segon">+</button>
-            </div>
-            <div class="row">
-              <button id="btn-timer-sound-test" class="btn">Provar so</button>
-            </div>
-          </div>
-          <div class="card">
-            <h3>Exportar i importar dades</h3>
+            <h3>Generador de grups</h3>
             <p>
-              Desa un fitxer de seguretat amb les aules i configuracions, o restaura’l quan ho necessitis.
+              Organitza l’alumnat en equips de manera aleatòria però equilibrada. El sistema reparteix
+              els participants evitant grups molt desiguals i mostra el resultat en format de cartes clares.
             </p>
-            <div class="row">
-              <button id="btn-export-data" class="btn primary">Exportar dades</button>
-              <button id="btn-import-data" class="btn">Importar dades</button>
-              <input id="import-file" type="file" accept="application/json" class="hidden" />
-            </div>
-          </div>
-          <div class="card danger">
-            <h3>Reinici total</h3>
             <p>
-              Esborra totes les dades guardades (aules, alumnes i configuracions). Aquesta acció és irreversible.
+              Perfecte per a treball cooperatiu, projectes i dinàmiques on necessites grups ràpidament,
+              amb una presentació visual que la classe entén d’un cop d’ull.
             </p>
-            <button id="btn-reset" class="btn danger">Esborrar totes les dades</button>
+          </div>
+          <div class="feature-image">
+            <img
+              src="images/grupos.jpg"
+              alt="Generador de grups"
+            />
           </div>
         </div>
       </section>
-    </div>
 
-    <div id="alert-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title">
-      <div class="modal-content">
-        <h3 id="alert-modal-title">Avís</h3>
-        <p id="alert-modal-message"></p>
-        <button id="alert-modal-close" class="btn primary" type="button">D'acord</button>
-      </div>
-    </div>
+      <section id="atzar" class="feature-band band-azure">
+        <div class="band-content feature-split">
+          <div>
+            <div class="icon-box">
+              <i class="fa-solid fa-dice"></i>
+            </div>
+            <h3>Selector d’atzar</h3>
+            <p>
+              Tria una persona amb un efecte visual atractiu que genera expectació. El resultat queda
+              destacat al centre perquè tota la classe el vegi immediatament.
+            </p>
+            <p>
+              Ideal per a preguntes ràpides, torns improvisats o per decidir qui comença una activitat,
+              tot amb un sol toc i sense repetir-se manualment.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="images/azar.jpg"
+              alt="Selector d’atzar"
+            />
+          </div>
+        </div>
+      </section>
 
-    <script src="app.js"></script>
+      <section id="torns" class="feature-band band-indigo">
+        <div class="band-content feature-split reverse">
+          <div>
+            <div class="icon-box">
+              <i class="fa-solid fa-list-ol"></i>
+            </div>
+            <h3><span class="white-text">Selector de torns</span></h3>
+            <span class="white-text">
+              Mantén el control de la participació amb un llistat visual de torns. Cada alumne només
+              apareix una vegada fins completar la ronda, evitant repeticions i confusions.
+            </p>
+            <span class="white-text">
+              Perfecte per a lectures en veu alta, exposicions ràpides o dinàmiques de classe en què
+              cal repartir torns de manera justa i transparent.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="images/turnos.jpg"
+              alt="Selector de torns"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section id="temps" class="feature-band band-navy">
+        <div class="band-content feature-split">
+          <div>
+            <div class="icon-box">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <h3>Temporitzador</h3>
+            <p>
+              Controla la durada de les activitats amb un temporitzador gran, visual i fàcil de llegir.
+              Permet configurar minuts o segons i inclou avisos sonors personalitzables.
+            </p>
+            <p>
+              Ideal per a treball en grup, jocs educatius, exàmens curts o rutines de concentració.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="images/temporizador.jpg"
+              alt="Temporitzador"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section id="dau" class="feature-band band-steel">
+        <div class="band-content feature-split reverse">
+          <div>
+            <div class="icon-box">
+              <i class="fa-solid fa-rotate"></i>
+            </div>
+            <h3>Dau i ruleta</h3>
+            <p>
+              Afegeix un component lúdic a l’aula amb el dau animat (1 o 2 daus) i la ruleta d’opcions
+              editables. Cada gir genera un resultat clar i immediat.
+            </p>
+            <p>
+              Perfecte per gamificar exercicis, decidir reptes o variar dinàmiques amb un toc visual
+              atractiu i professional.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="images/dados.jpg"
+              alt="Dau i ruleta"
+            />
+          </div>
+        </div>
+      </section>
+
+      <footer class="landing-footer">
+        <div>
+          <h4>El Pot de la Sort</h4>
+          <p>Aplicació educativa per dinamitzar l’aula amb criteri i transparència.</p>
+        </div>
+        <div>
+          <h4>Contacte</h4>
+          <p>suport@elpotdelasort.cat</p>
+        </div>
+        <div>
+          <h4>Enllaços</h4>
+          <a href="#hero">Inici</a>
+          <a href="#aules">Funcionalitats</a>
+          <a href="app.html">Entrar a l’aplicació</a>
+        </div>
+      </footer>
+    </div>
   </body>
 </html>

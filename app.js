@@ -140,11 +140,13 @@ const updateShuffleStack = (cards, visibleLetters = 4) => {
 };
 
 const renderLanding = () => {
+  if (!elements.landing || !elements.app) return;
   elements.landing.classList.remove("hidden");
   elements.app.classList.add("hidden");
 };
 
 const renderApp = () => {
+  if (!elements.landing || !elements.app) return;
   elements.landing.classList.add("hidden");
   elements.app.classList.remove("hidden");
 };
@@ -1584,8 +1586,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   elements.groupSize.value = state.data.lastGroupSize || 3;
 
-  addTapListener(elements.btnEnter, () => renderApp());
-  addTapListener(elements.btnGoLanding, () => renderLanding());
+  if (elements.btnEnter) {
+    addTapListener(elements.btnEnter, () => renderApp());
+  }
+  if (elements.btnGoLanding) {
+    addTapListener(elements.btnGoLanding, () => renderLanding());
+  }
   addTapListener(elements.btnSaveClass, saveClassroom);
   addTapListener(elements.btnCancelEdit, resetForm);
   addTapListener(elements.btnGenerateGroups, handleGenerateGroups);

@@ -1,0 +1,263 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+
+:root {
+  --primary: #1f3a8a;
+  --primary-dark: #172554;
+  --text: #0f172a;
+  --muted: #475569;
+  --light: #f8fafc;
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Nunito", sans-serif;
+  color: var(--text);
+  background: #ffffff;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.landing-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 6vw;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.landing-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.landing-brand h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.landing-brand p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.landing-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.landing-nav a {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.landing-nav a:hover {
+  color: var(--primary);
+}
+
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(31, 58, 138, 0.3);
+}
+
+.btn.primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn.ghost {
+  border: 2px solid #e2e8f0;
+  background: transparent;
+  color: var(--primary);
+}
+
+.btn.big {
+  font-size: 18px;
+  padding: 14px 24px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+  align-items: center;
+  padding: 50px 6vw 40px;
+  background: linear-gradient(120deg, #eef2ff 0%, #ffffff 45%, #f8fafc 100%);
+}
+
+.hero-content h2 {
+  margin: 0 0 12px;
+  font-size: clamp(36px, 4vw, 52px);
+}
+
+.hero-content p {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-image img {
+  width: 100%;
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  object-fit: cover;
+  max-height: 420px;
+}
+
+.feature-band {
+  padding: 48px 6vw;
+}
+
+.band-content {
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.band-content h3 {
+  font-size: 28px;
+  margin: 0 0 12px;
+}
+
+.band-content p {
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.feature-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: center;
+  gap: 28px;
+}
+
+.feature-split.reverse .feature-image {
+  order: -1;
+}
+
+.feature-image img {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.band-blue {
+  background: #e0e7ff;
+}
+
+.band-sky {
+  background: #1ef39b;
+}
+
+.band-azure {
+  background: #e0f2fe;
+}
+
+.band-indigo {
+  background: #6774a1;
+}
+
+.band-navy {
+  background: #dbeafe;
+}
+
+.band-steel {
+  background: #dee5b3;
+}
+
+.white-text {
+  color: #ffffff;
+}
+
+.landing-footer {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 32px 6vw;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.landing-footer h4 {
+  margin: 0 0 8px;
+  color: #ffffff;
+}
+
+.landing-footer a {
+  display: block;
+  color: #cbd5f5;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 900px) {
+  .landing-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
