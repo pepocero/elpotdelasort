@@ -261,3 +261,9 @@ a {
     align-items: flex-start;
   }
 }
+
+@media (max-width: 700px) {
+  .landing-header {
+    display: none;
+  }
+}
