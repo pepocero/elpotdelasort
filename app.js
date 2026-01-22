@@ -9,6 +9,7 @@ const defaultData = () => ({
   timerSoundDurationSec: 2,
   rouletteSets: [],
   lastRouletteSetId: "",
+  rouletteSpinDurationSec: 6,
 });
 
 const GROUP_ANIMATION_DURATION = 6500;
@@ -949,6 +950,9 @@ const updateTimerUI = () => {
   if (elements.timerSoundDurationDisplay) {
     elements.timerSoundDurationDisplay.textContent = `${state.data.timerSoundDurationSec} segons`;
   }
+  if (elements.rouletteSpinDurationDisplay) {
+    elements.rouletteSpinDurationDisplay.textContent = `${state.data.rouletteSpinDurationSec || 6} segons`;
+  }
   if (elements.btnTimerSoundTest) {
     elements.btnTimerSoundTest.disabled = state.timer.running;
   }
@@ -1171,6 +1175,11 @@ const adjustTimerStepLong = (delta) => {
 const updateDiceUI = () => {
   if (!elements.diceCount || !elements.diceSum || !elements.dieTwo) return;
   state.diceCount = Number(elements.diceCount.value) || 1;
+  // Limpiar el texto al cambiar de 1 a 2 dados
+  if (elements.diceSum) {
+    elements.diceSum.textContent = "";
+    elements.diceSum.classList.add("hidden");
+  }
   if (state.diceCount === 2) {
     elements.dieTwo.classList.remove("hidden");
     elements.diceSum.classList.remove("hidden");
@@ -1220,15 +1229,20 @@ const rollDice = () => {
   if (state.diceRolling || !elements.dieOneCube) return;
   state.diceRolling = true;
   updateDiceUI();
-  const face1 = Math.floor(Math.random() * 6) + 1;
-  const face2 = Math.floor(Math.random() * 6) + 1;
+  const face1 = getRandomIndex(6) + 1;
+  const face2 = getRandomIndex(6) + 1;
   rollSingleDie(elements.dieOneCube, face1);
   if (state.diceCount === 2 && elements.dieTwoCube) {
     rollSingleDie(elements.dieTwoCube, face2);
   }
+  if (elements.diceSum) {
+    elements.diceSum.textContent = "";
+    elements.diceSum.classList.add("hidden");
+  }
   setTimeout(() => {
     if (state.diceCount === 2 && elements.diceSum) {
       elements.diceSum.textContent = String(face1 + face2);
+      elements.diceSum.classList.remove("hidden");
     }
     state.diceRolling = false;
   }, 2800);
@@ -1250,7 +1264,10 @@ const buildRoulette = (options) => {
   if (options.length === 0) {
     elements.rouletteWheel.style.background =
       "conic-gradient(#e3e9fb 0deg, #f5f7ff 360deg)";
-    elements.rouletteResult.textContent = "Afegeix opcions per començar";
+    if (!state.rouletteSpinning) {
+      elements.rouletteResult.textContent = "Afegeix opcions per començar";
+      elements.rouletteResult.style.opacity = "1";
+    }
     return;
   }
   const segment = 360 / options.length;
@@ -1333,20 +1350,114 @@ const spinRoulette = () => {
   }
   buildRoulette(options);
   state.rouletteSpinning = true;
-  const segment = 360 / options.length;
-  let targetIndex = getRandomIndex(options.length);
-  if (options.length > 1 && state.rouletteLastIndex === targetIndex) {
-    targetIndex = (targetIndex + 1) % options.length;
+  
+  // Ocultar resultado anterior y mantenerlo oculto durante todo el proceso
+  if (elements.rouletteResult) {
+    elements.rouletteResult.textContent = "";
+    elements.rouletteResult.style.display = "none";
   }
-  state.rouletteLastIndex = targetIndex;
-  const spins = 4 + Math.floor(Math.random() * 3);
-  const totalRotation = spins * 360 - (targetIndex * segment + segment / 2);
-  state.rouletteRotation = totalRotation;
-  elements.rouletteWheel.style.transform = `rotate(${totalRotation}deg)`;
+  
+  const segment = 360 / options.length;
+  
+  // Duración de giro configurable (por defecto 6 segundos)
+  const spinDurationSec = state.data.rouletteSpinDurationSec || 6;
+  const spinDurationMs = spinDurationSec * 1000;
+  
+  // Rotación inicial rápida (giro continuo durante X segundos)
+  let currentRotation = state.rouletteRotation || 0;
+  const rotationSpeed = 720; // grados por segundo durante el giro rápido
+  
+  // Calcular una rotación final aleatoria
+  // La ruleta girará y se detendrá en una posición aleatoria
+  const randomExtraRotation = Math.random() * 360; // 0-360 grados aleatorios
+  const extraSpins = 3 + Math.floor(Math.random() * 3); // 3-5 vueltas adicionales
+  const totalRandomRotation = extraSpins * 360 + randomExtraRotation;
+  
+  // Variable para almacenar la rotación final (necesaria para el cálculo del resultado)
+  let finalRotation = 0;
+  
+  // Fase 1: Girar rápidamente durante X segundos
+  const startTime = Date.now();
+  const animateFastSpin = () => {
+    if (!state.rouletteSpinning) return;
+    const elapsed = Date.now() - startTime;
+    if (elapsed < spinDurationMs) {
+      currentRotation += (rotationSpeed * 16) / 1000; // 16ms por frame aprox
+      elements.rouletteWheel.style.transform = `rotate(${currentRotation}deg)`;
+      requestAnimationFrame(animateFastSpin);
+    } else {
+      // Fase 2: Detenerse lentamente en una posición aleatoria
+      finalRotation = currentRotation + totalRandomRotation;
+      
+      // Animación de desaceleración (1 segundo)
+      const decelerationDuration = 1000;
+      const decelerationStart = Date.now();
+      const startRot = currentRotation;
+      
+      const animateDeceleration = () => {
+        if (!state.rouletteSpinning) return;
+        const elapsed = Date.now() - decelerationStart;
+        if (elapsed < decelerationDuration) {
+          const progress = elapsed / decelerationDuration;
+          // Easing out (desaceleración suave)
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          currentRotation = startRot + (finalRotation - startRot) * easeOut;
+          elements.rouletteWheel.style.transform = `rotate(${currentRotation}deg)`;
+          requestAnimationFrame(animateDeceleration);
+        } else {
+          // Finalizar con la rotación exacta
+          state.rouletteRotation = finalRotation;
+          elements.rouletteWheel.style.transform = `rotate(${finalRotation}deg)`;
+        }
+      };
+      
+      requestAnimationFrame(animateDeceleration);
+    }
+  };
+  
+  requestAnimationFrame(animateFastSpin);
+  
+  // Calcular y mostrar el resultado después del tiempo configurado + 5 segundos adicionales
   setTimeout(() => {
-    elements.rouletteResult.textContent = options[targetIndex];
+    // Calcular qué opción está apuntando el puntero
+    // 
+    // RAZONAMIENTO CORRECTO:
+    // 1. Los segmentos se construyen con: startAngle = -90 + index * segment
+    //    - Segmento 0: de -90 a -90 + segment (centro en -90 + segment/2)
+    //    - Segmento 1: de -90 + segment a -90 + 2*segment (centro en -90 + segment + segment/2)
+    //    - Segmento i: de -90 + i*segment a -90 + (i+1)*segment (centro en -90 + i*segment + segment/2)
+    //
+    // 2. El puntero está fijo en 0 grados (arriba)
+    //
+    // 3. Después de rotar finalRotation grados, el ángulo que está en 0 grados (puntero)
+    //    tiene su valor original en: -finalRotation (mod 360)
+    //    En coordenadas positivas: (360 - finalNormalized) mod 360
+    //
+    // 4. Necesito encontrar qué segmento tiene su centro en ese ángulo
+    //    El centro del segmento i está en: -90 + i*segment + segment/2
+    //    En coordenadas 0-360: (270 + i*segment + segment/2) mod 360
+    //
+    // 5. Resolver: (270 + i*segment + segment/2) mod 360 = (360 - finalNormalized) mod 360
+    //    i*segment = (360 - finalNormalized - 270 - segment/2) mod 360
+    //    i*segment = (90 - finalNormalized - segment/2) mod 360
+    //    i = ((90 - finalNormalized - segment/2) mod 360) / segment
+    
+    // Normalizar el ángulo al inicio real del SVG (segmento 0 empieza en -90° = 270°)
+    const rot = ((finalRotation % 360) + 360) % 360;
+    // Ángulo bajo el puntero (puntero fijo en 270°)
+    const angleUnderPointer = (270 - rot + 360) % 360;
+    // Normalizar para que el segmento 0 empiece en 0°
+    const normalizedAngle = (angleUnderPointer - 270 + 360) % 360;
+    const calculatedIndex = Math.floor(normalizedAngle / segment) % options.length;
+    
+    // Mostrar el resultado SOLO después del tiempo configurado + 5 segundos adicionales
+    if (elements.rouletteResult) {
+      elements.rouletteResult.textContent = options[calculatedIndex];
+      elements.rouletteResult.style.display = "";
+    }
+    state.rouletteLastIndex = calculatedIndex;
     state.rouletteSpinning = false;
-  }, 3600);
+  }, spinDurationMs + 5000); // Tiempo configurado + 5 segundos adicionales
 };
 
 const startTimerHold = (delta) => {
@@ -1481,14 +1592,17 @@ const importData = (file) => {
       renderClassSelects();
       renderRouletteSetCards();
       renderRouletteSetSelect();
-      if (state.data.lastRouletteSetId) {
-        loadRouletteSetOptions(state.data.lastRouletteSetId);
+      // No cargar automáticamente las opciones guardadas - el campo debe aparecer vacío
+      if (elements.rouletteOptions) {
+        elements.rouletteOptions.value = "";
+        buildRoulette([]);
       }
       elements.groupSize.value = state.data.lastGroupSize || 3;
       if (elements.timerSound) {
         elements.timerSound.value = state.data.timerSound || "beep_long";
       }
       state.data.timerSoundDurationSec = state.data.timerSoundDurationSec || 2;
+      state.data.rouletteSpinDurationSec = state.data.rouletteSpinDurationSec || 6;
       updateTimerUI();
       elements.groupsResult.innerHTML = "";
       elements.pickerResult.textContent = "";
@@ -1576,6 +1690,9 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.btnSoundMinus = $("btn-sound-minus");
   elements.btnSoundPlus = $("btn-sound-plus");
   elements.timerSoundDurationDisplay = $("timer-sound-duration");
+  elements.rouletteSpinDurationDisplay = $("roulette-spin-duration");
+  elements.btnRouletteMinus = $("btn-roulette-minus");
+  elements.btnRoulettePlus = $("btn-roulette-plus");
   elements.timerCircle = $("timer-circle");
   elements.timerDisplay = $("timer-display");
   elements.timerStatus = $("timer-status");
@@ -1607,13 +1724,16 @@ document.addEventListener("DOMContentLoaded", () => {
   state.data = loadData();
   state.data.timerSound = state.data.timerSound || "beep_long";
   state.data.timerSoundDurationSec = state.data.timerSoundDurationSec || 2;
+  state.data.rouletteSpinDurationSec = state.data.rouletteSpinDurationSec || 6;
 
   renderClassCards();
   renderClassSelects();
   renderRouletteSetCards();
   renderRouletteSetSelect();
-  if (state.data.lastRouletteSetId) {
-    loadRouletteSetOptions(state.data.lastRouletteSetId);
+  // No cargar automáticamente las opciones guardadas - el campo debe aparecer vacío
+  if (elements.rouletteOptions) {
+    elements.rouletteOptions.value = "";
+    buildRoulette([]);
   }
   elements.groupSize.value = state.data.lastGroupSize || 3;
 
@@ -1700,6 +1820,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (elements.btnTimerSoundTest) {
     addTapListener(elements.btnTimerSoundTest, playTimerSound);
+  }
+  if (elements.btnRouletteMinus) {
+    addTapListener(elements.btnRouletteMinus, () => {
+      const next = Math.max(1, Math.min(30, (state.data.rouletteSpinDurationSec || 6) - 1));
+      state.data.rouletteSpinDurationSec = next;
+      saveData();
+      updateTimerUI();
+    });
+  }
+  if (elements.btnRoulettePlus) {
+    addTapListener(elements.btnRoulettePlus, () => {
+      const next = Math.max(1, Math.min(30, (state.data.rouletteSpinDurationSec || 6) + 1));
+      state.data.rouletteSpinDurationSec = next;
+      saveData();
+      updateTimerUI();
+    });
   }
 
   document.querySelectorAll(".btn.tab").forEach((btn) => {

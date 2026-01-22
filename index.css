@@ -40,9 +40,6 @@ a {
   padding: 20px 6vw;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  position: sticky;
-  top: 0;
-  z-index: 20;
 }
 
 .landing-brand {
