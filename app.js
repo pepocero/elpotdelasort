@@ -44,6 +44,8 @@ const state = {
   rouletteSpinning: false,
   rouletteLastIndex: null,
   rouletteEditingId: "",
+  pickerExcluded: new Set(),
+  turnExcluded: new Set(),
 };
 
 const elements = {};
@@ -614,11 +616,12 @@ const handleGenerateGroups = () => {
 const getPickerList = () => {
   const manual = parseList(elements.pickerList.value);
   if (manual.length > 0) {
-    return manual;
+    return manual.filter((name) => !state.pickerExcluded.has(name));
   }
   const classId = elements.pickerClass.value;
   const classroom = state.data.classrooms.find((item) => item.id === classId);
-  return classroom ? classroom.students : [];
+  const list = classroom ? classroom.students : [];
+  return list.filter((name) => !state.pickerExcluded.has(name));
 };
 
 const renderPickerClassChips = () => {
@@ -634,6 +637,17 @@ const renderPickerClassChips = () => {
     const chip = document.createElement("span");
     chip.className = "turn-chip";
     chip.textContent = name;
+    if (state.pickerExcluded.has(name)) {
+      chip.classList.add("excluded");
+    }
+    addTapListener(chip, () => {
+      if (state.pickerExcluded.has(name)) {
+        state.pickerExcluded.delete(name);
+      } else {
+        state.pickerExcluded.add(name);
+      }
+      renderPickerClassChips();
+    });
     elements.pickerClassStudents.appendChild(chip);
   });
 };
@@ -783,12 +797,18 @@ const launchCelebration = () => {
 const getTurnCandidates = () => {
   const manual = parseList(elements.turnList.value);
   if (manual.length > 0) {
-    return { list: manual, key: `manual:${manual.join("|")}` };
+    return {
+      list: manual.filter((name) => !state.turnExcluded.has(name)),
+      key: `manual:${manual.join("|")}`,
+    };
   }
   const classId = elements.turnClass.value;
   const classroom = state.data.classrooms.find((item) => item.id === classId);
   const list = classroom ? classroom.students : [];
-  return { list, key: `class:${classId}` };
+  return {
+    list: list.filter((name) => !state.turnExcluded.has(name)),
+    key: `class:${classId}`,
+  };
 };
 
 const renderTurnClassChips = () => {
@@ -804,6 +824,17 @@ const renderTurnClassChips = () => {
     const chip = document.createElement("span");
     chip.className = "turn-chip";
     chip.textContent = name;
+    if (state.turnExcluded.has(name)) {
+      chip.classList.add("excluded");
+    }
+    addTapListener(chip, () => {
+      if (state.turnExcluded.has(name)) {
+        state.turnExcluded.delete(name);
+      } else {
+        state.turnExcluded.add(name);
+      }
+      renderTurnClassChips();
+    });
     elements.turnClassStudents.appendChild(chip);
   });
 };
@@ -1602,32 +1633,23 @@ document.addEventListener("DOMContentLoaded", () => {
   addTapListener(elements.btnTimerStart, startTimer);
   addTapListener(elements.btnTimerPause, pauseTimer);
   addTapListener(elements.btnTimerReset, resetTimer);
-  if (elements.btnTimerMinus) {
-    elements.btnTimerMinus.addEventListener("mousedown", () => startTimerHold(-1));
-    elements.btnTimerMinus.addEventListener("touchstart", (event) => {
+  const attachTimerStepper = (element, delta) => {
+    if (!element) return;
+    element.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
       event.preventDefault();
-      startTimerHold(-1);
+      startTimerHold(delta);
     });
-    elements.btnTimerMinus.addEventListener("mouseup", () => stopTimerHold(-1));
-    elements.btnTimerMinus.addEventListener("mouseleave", () => stopTimerHold(-1));
-    elements.btnTimerMinus.addEventListener("touchend", (event) => {
+    element.addEventListener("pointerup", (event) => {
       event.preventDefault();
-      stopTimerHold(-1);
+      stopTimerHold(delta);
     });
-  }
-  if (elements.btnTimerPlus) {
-    elements.btnTimerPlus.addEventListener("mousedown", () => startTimerHold(1));
-    elements.btnTimerPlus.addEventListener("touchstart", (event) => {
-      event.preventDefault();
-      startTimerHold(1);
-    });
-    elements.btnTimerPlus.addEventListener("mouseup", () => stopTimerHold(1));
-    elements.btnTimerPlus.addEventListener("mouseleave", () => stopTimerHold(1));
-    elements.btnTimerPlus.addEventListener("touchend", (event) => {
-      event.preventDefault();
-      stopTimerHold(1);
-    });
-  }
+    element.addEventListener("pointercancel", () => stopTimerHold(delta));
+    element.addEventListener("pointerleave", () => stopTimerHold(delta));
+  };
+
+  attachTimerStepper(elements.btnTimerMinus, -1);
+  attachTimerStepper(elements.btnTimerPlus, 1);
   addTapListener(elements.btnExportPDF, exportToPDF);
   addTapListener(elements.btnExportData, exportData);
   addTapListener(elements.btnImportData, () => elements.importFile.click());
@@ -1642,12 +1664,14 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.pickerClass.addEventListener("change", (event) => {
     state.data.lastClassId = event.target.value;
     saveData();
+    state.pickerExcluded.clear();
     renderPickerClassChips();
   });
 
   elements.turnClass.addEventListener("change", (event) => {
     state.data.lastClassId = event.target.value;
     saveData();
+    state.turnExcluded.clear();
     renderTurnClassChips();
   });
 
@@ -1688,10 +1712,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (elements.pickerClass) {
         elements.pickerClass.value = "";
         renderPickerClassChips();
+        state.pickerExcluded.clear();
       }
       if (elements.turnClass) {
         elements.turnClass.value = "";
         renderTurnClassChips();
+        state.turnExcluded.clear();
       }
       if (elements.rouletteSaved) {
         elements.rouletteSaved.value = "";

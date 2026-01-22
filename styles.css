@@ -700,8 +700,8 @@ textarea {
   margin-top: 12px;
   display: grid;
   gap: 8px;
-  max-height: 220px;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .turn-chips {
@@ -720,6 +720,14 @@ textarea {
   border-radius: 999px;
   font-size: 14px;
   font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.turn-chip.excluded {
+  background: #fecaca;
+  border-color: #ef4444;
+  color: #991b1b;
 }
 
 .turn-item {
