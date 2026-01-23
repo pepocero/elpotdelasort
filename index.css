@@ -204,6 +204,12 @@ a {
   margin-bottom: 12px;
 }
 
+.icon-box.orange {
+  background: #fff7ed;
+  color: #ea580c;
+  box-shadow: 0 16px 30px rgba(234, 88, 12, 0.2);
+}
+
 .band-blue {
   background: #e0e7ff;
 }
@@ -216,6 +222,10 @@ a {
   background: #e0f2fe;
 }
 
+.band-orange {
+  background: #e8e985;
+}
+
 .band-indigo {
   background: #6774a1;
 }
@@ -226,6 +236,23 @@ a {
 
 .band-steel {
   background: #dee5b3;
+}
+
+.privacy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.privacy-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.privacy-card h4 {
+  margin: 0 0 8px;
 }
 
 .white-text {
