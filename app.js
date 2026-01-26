@@ -1755,17 +1755,32 @@ document.addEventListener("DOMContentLoaded", () => {
   addTapListener(elements.btnTimerReset, resetTimer);
   const attachTimerStepper = (element, delta) => {
     if (!element) return;
-    element.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
+    let isActive = false;
+    
+    const handleStart = (event) => {
+      if (event.button !== 0 && event.button !== undefined) return;
       event.preventDefault();
-      startTimerHold(delta);
-    });
-    element.addEventListener("pointerup", (event) => {
-      event.preventDefault();
-      stopTimerHold(delta);
-    });
-    element.addEventListener("pointercancel", () => stopTimerHold(delta));
-    element.addEventListener("pointerleave", () => stopTimerHold(delta));
+      if (!isActive) {
+        isActive = true;
+        startTimerHold(delta);
+      }
+    };
+    
+    const handleEnd = (event) => {
+      if (isActive) {
+        event.preventDefault();
+        isActive = false;
+        stopTimerHold(delta);
+      }
+    };
+    
+    // Usar eventos específicos para evitar problemas con hover
+    element.addEventListener("mousedown", handleStart);
+    element.addEventListener("mouseup", handleEnd);
+    element.addEventListener("mouseleave", handleEnd);
+    element.addEventListener("touchstart", handleStart, { passive: false });
+    element.addEventListener("touchend", handleEnd, { passive: false });
+    element.addEventListener("touchcancel", handleEnd);
   };
 
   attachTimerStepper(elements.btnTimerMinus, -1);
@@ -1957,4 +1972,28 @@ document.addEventListener("DOMContentLoaded", () => {
   if (elements.rouletteOptions) {
     buildRoulette(parseList(elements.rouletteOptions.value));
   }
+
+  // Manejar hash de URL para navegar a paneles específicos
+  const handleHashChange = () => {
+    const hash = window.location.hash.substring(1); // Eliminar el #
+    if (hash) {
+      const validTargets = ["config", "groups", "picker", "turns", "timer", "dice-wheel", "settings"];
+      if (validTargets.includes(hash)) {
+        setActiveTab(hash);
+        // Cerrar sidebar si está abierto
+        if (elements.sidebar) {
+          elements.sidebar.classList.remove("open");
+        }
+        if (elements.sidebarBackdrop) {
+          elements.sidebarBackdrop.classList.remove("visible");
+        }
+      }
+    }
+  };
+
+  // Manejar hash al cargar la página
+  handleHashChange();
+
+  // Manejar cambios en el hash
+  window.addEventListener("hashchange", handleHashChange);
 });
