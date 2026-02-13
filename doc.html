@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentació - El Pot de la Sort</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <style>
+      .doc-layout { display: flex; gap: 32px; max-width: 1100px; margin: 0 auto; }
+      .doc-nav { flex: 0 0 220px; position: sticky; top: 24px; height: fit-content; }
+      .doc-nav a { display: block; padding: 8px 12px; color: var(--muted); text-decoration: none; border-radius: 8px; font-size: 0.95rem; }
+      .doc-nav a:hover { background: rgba(59, 110, 245, 0.08); color: var(--primary); }
+      .doc-content { flex: 1; min-width: 0; }
+      .doc-section { margin-bottom: 48px; }
+      .doc-section h2 { margin: 0 0 16px; font-size: 1.5rem; color: var(--text); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+      .doc-section h3 { margin: 24px 0 12px; font-size: 1.15rem; }
+      .doc-section p { margin: 0 0 12px; line-height: 1.65; color: var(--text); }
+      .doc-section ul { margin: 8px 0 16px; padding-left: 24px; }
+      .doc-section li { margin-bottom: 6px; line-height: 1.5; }
+      .doc-note { background: #e8f4ff; border-left: 4px solid var(--primary); padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+      .doc-note strong { display: block; margin-bottom: 4px; }
+      @media (max-width: 768px) { .doc-layout { flex-direction: column; } .doc-nav { position: static; } }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top-bar">
+        <a href="index.html" class="brand" style="text-decoration: none; color: inherit;">
+          <img class="brand-icon" src="favicon.svg" alt="El Pot de la Sort" />
+          <div>
+            <h1>El Pot de la Sort</h1>
+            <p>Documentació de l'aplicació</p>
+          </div>
+        </a>
+        <a href="app.html" class="btn primary">Entrar a l'aplicació</a>
+      </header>
+
+      <section class="section">
+        <div class="doc-layout">
+          <nav class="doc-nav card" style="padding: 16px;">
+            <strong style="display: block; margin-bottom: 12px;">Contingut</strong>
+            <a href="#config-aules">Configuració d'aules</a>
+            <a href="#grups">Generador de grups</a>
+            <a href="#atzar">Selector d'atzar</a>
+            <a href="#torns">Selector de torns</a>
+            <a href="#timer">Temporitzador</a>
+            <a href="#dau-ruleta">Dau i ruleta</a>
+            <a href="#configuracio">Configuració</a>
+          </nav>
+          <div class="doc-content">
+            <div class="doc-section" id="config-aules">
+              <h2>Configuració d'aules</h2>
+              <p>En aquesta secció pots crear i gestionar les aules amb les llistes d'alumnes. És el punt de partida per utilitzar la resta d'eines.</p>
+              <h3>Com funciona</h3>
+              <ul>
+                <li><strong>Crear una aula:</strong> Escriu el nom de la classe (p. ex. "2n ESO A") i la llista d'alumnes, un nom per línia. Prem "Desar aula".</li>
+                <li><strong>Editar una aula:</strong> Prem "Editar" a una aula desada. Modifica el nom o els alumnes i torna a desar.</li>
+                <li><strong>Eliminar una aula:</strong> Prem "Eliminar" i confirma.</li>
+                <li><strong>Seleccionar una aula:</strong> Prem "Seleccionar" per utilitzar-la en Generador de grups, Selector d'atzar o Selector de torns.</li>
+              </ul>
+              <p class="doc-note"><strong>Consell:</strong> Les dades es guarden automàticament al teu dispositiu. No cal cap registre ni connexió.</p>
+            </div>
+
+            <div class="doc-section" id="grups">
+              <h2>Generador de grups aleatoris</h2>
+              <p>Reparteix l'alumnat en equips de manera aleatòria i equilibrada, evitant grups molt desiguals o alumnes sols.</p>
+              <h3>Com funciona</h3>
+              <ul>
+                <li><strong>Font d'alumnes:</strong> Selecciona una aula desada o escriu/edita la llista manualment al camp d'edició ràpida.</li>
+                <li><strong>Mida del grup:</strong> Indica quants alumnes vols per grup (mínim 2).</li>
+                <li><strong>Crear grups:</strong> Prem "Crear grups aleatòriament". Es mostrarà una animació de barreja i després els grups en format de cartes.</li>
+                <li><strong>Exportar a PDF:</strong> Després de generar grups, pots exportar-los a PDF per imprimir o desar.</li>
+              </ul>
+              <p>L'algorisme evita deixar un sol alumne en un grup quan és possible, redistribuint-los de forma equilibrada.</p>
+            </div>
+
+            <div class="doc-section" id="atzar">
+              <h2>Selector d'una persona a l'atzar</h2>
+              <p>Tria una persona de la llista de forma aleatòria, amb una animació visual que genera expectació a la classe.</p>
+              <h3>Com funciona</h3>
+              <ul>
+                <li><strong>Font:</strong> Selecciona una aula o escriu una llista manual (un nom per línia).</li>
+                <li><strong>Excloure persones:</strong> Si has seleccionat una aula, pots fer clic als xips per excloure alumnes de la selecció (tornen a incloure's en fer clic de nou).</li>
+                <li><strong>Seleccionar:</strong> Prem "Escollir una persona a l'atzar". Es mostrarà una animació ràpida i el resultat amb confetti.</li>
+              </ul>
+            </div>
+
+            <div class="doc-section" id="torns">
+              <h2>Selector de torn continu</h2>
+              <p>Reparteix torns de participació de forma ordenada: cada alumne surt una sola vegada fins completar la ronda.</p>
+              <h3>Com funciona</h3>
+              <ul>
+                <li><strong>Font:</strong> Selecciona una aula o introdueix una llista manual.</li>
+                <li><strong>Excloure persones:</strong> Pots excloure alumnes amb els xips (p. ex. absent avui).</li>
+                <li><strong>Començar torns:</strong> Prem "Començar torns" per barrejar i mostrar el primer torn.</li>
+                <li><strong>Següent torn:</strong> Prem "Següent torn" per anar passant per tots els participants.</li>
+                <li><strong>Reiniciar:</strong> "Reiniciar torns" torna a barrejar i comença de zero.</li>
+              </ul>
+              <p>Es mostra l'ordre dels torns i qui toca ara. Ideal per lectures, exposicions o dinàmiques per torns.</p>
+            </div>
+
+            <div class="doc-section" id="timer">
+              <h2>Temporitzador visual</h2>
+              <p>Controla la durada de les activitats amb un temporitzador gran, visible i fàcil de llegir.</p>
+              <h3>Com funciona</h3>
+              <ul>
+                <li><strong>Predefinits:</strong> Prem un dels botons (5, 10, 15 o 20 min) per posar una durada ràpida.</li>
+                <li><strong>Ajustar temps:</strong> Utilitza els botons + i - per canviar minuts. Si mantens premut, salta de 5 en 5 minuts.</li>
+                <li><strong>Controls:</strong> Iniciar, Pausa i Reiniciar.</li>
+                <li><strong>So de finalització:</strong> Quan acaba el temps, sona l'alarma configurada a Configuració. Pots provar-la allà.</li>
+              </ul>
+              <p>El cercle mostra el temps restant de forma visual. Quan arriba a zero, es mostra un avís i es reprodueix el so.</p>
+            </div>
+
+            <div class="doc-section" id="dau-ruleta">
+              <h2>Dau i ruleta</h2>
+              <p>Afegeix elements lúdics a l'aula amb un dau animat i una ruleta d'opcions personalitzables.</p>
+              <h3>Dau animat</h3>
+              <ul>
+                <li>Pots triar 1 o 2 daus.</li>
+                <li>Prem "Tirar el dau" per veure l'animació i el resultat.</li>
+                <li>Amb 2 daus, es mostra la suma dels dos.</li>
+              </ul>
+              <h3>Ruleta</h3>
+              <ul>
+                <li><strong>Opcions:</strong> Escriu les opcions (una per línia) o selecciona un conjunt guardat des de Configuració.</li>
+                <li><strong>Girar:</strong> Prem "Girar ruleta" per fer-la girar. El temps de gir es pot configurar a Configuració.</li>
+                <li>Perfecte per preguntes aleatòries, reptes, temes o decisions lúdiques.</li>
+              </ul>
+            </div>
+
+            <div class="doc-section" id="configuracio">
+              <h2>Configuració</h2>
+              <p>Des d'aquí es configuren les preferències de l'aplicació. Totes les opcions es guarden localment al teu dispositiu.</p>
+
+              <h3>Opcions guardades de la ruleta</h3>
+              <p>Guarda conjunts d'opcions per reutilitzar-los a la ruleta sense haver-les d'escriure cada vegada.</p>
+              <ul>
+                <li><strong>Nom del conjunt:</strong> Un nom descriptiu (p. ex. "Preguntes ràpides", "Reptes").</li>
+                <li><strong>Opcions:</strong> Una opció per línia (mínim 2).</li>
+                <li>Després de desar, apareixeran a la ruleta al desplegable "Selecciona opcions guardades".</li>
+                <li>Pots Editar o Eliminar cada conjunt.</li>
+              </ul>
+
+              <h3>So del temporitzador</h3>
+              <p>Quan el temporitzador arriba a zero, sona una alarma. Aquí pots triar quin so i quant de temps dura.</p>
+              <ul>
+                <li><strong>Tipus de so:</strong> Xiulet suau, Xiulet esportiu, Campanades d'església, Sirena de policia, Sirena d'atac aeri, Sirena d'alarma.</li>
+                <li><strong>Durada del so:</strong> Entre 1 i 15 segons. Utilitza + i - per ajustar.</li>
+                <li><strong>Provar so:</strong> Prem "Provar so" per escoltar abans d'iniciar el temporitzador.</li>
+              </ul>
+
+              <h3>Durada de gir de la ruleta</h3>
+              <p>Defineix durant quant temps gira la ruleta abans de detenir-se i mostrar el resultat.</p>
+              <ul>
+                <li>Valors entre 1 i 30 segons. Per defecte: 6 segons.</li>
+                <li>Més temps genera més expectació; menys temps, resultats més ràpids.</li>
+              </ul>
+
+              <h3>Exportar i importar dades</h3>
+              <p>Fes còpies de seguretat o trasllada les teves dades entre dispositius.</p>
+              <ul>
+                <li><strong>Exportar dades:</strong> Desa un fitxer JSON amb totes les aules, conjunts de ruleta i configuracions.</li>
+                <li><strong>Importar dades:</strong> Restaura des d'un fitxer JSON exportat prèviament. Les dades importades substituiran les actuals.</li>
+              </ul>
+
+              <h3>Reinici total</h3>
+              <p><strong>Atenció:</strong> Esborra totes les dades (aules, alumnes, conjunts de ruleta, configuracions). L'acció és irreversible.</p>
+              <p>Utilitza-ho només si vols començar de zero o alliberar l'espai emmagatzemat.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

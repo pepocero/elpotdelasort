@@ -321,6 +321,13 @@ body {
   text-align: left;
 }
 
+.sidebar-links .sidebar-doc-link {
+  justify-content: flex-start;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+}
+
 .sidebar-backdrop {
   position: fixed;
   inset: 0;

@@ -238,6 +238,21 @@ a {
   background: #dee5b3;
 }
 
+.band-doc {
+  background: #e9dede;
+}
+
+.band-doc h4 {
+  font-size: 22px;
+  margin: 0 0 16px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.band-doc .btn {
+  margin-top: 8px;
+}
+
 .privacy-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
