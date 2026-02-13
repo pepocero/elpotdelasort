@@ -268,6 +268,13 @@ a {
   gap: 20px;
 }
 
+.footer-logo {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  display: block;
+}
+
 .landing-footer h4 {
   margin: 0 0 8px;
   color: #ffffff;
